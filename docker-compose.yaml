@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16
+    env_file: .env
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+
+  airflow-init:
+    image: apache/airflow:3.0.0
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_started
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    command: ["airflow", "db", "migrate"]
+    restart: "no"
+
+  airflow-api-server:
+    image: apache/airflow:3.0.0
+    depends_on:
+      postgres:
+        condition: service_started
+      airflow-init:
+        condition: service_completed_successfully
+    env_file: .env
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    command: api-server
+
+  airflow-scheduler:
+    image: apache/airflow:3.0.0
+    depends_on:
+      postgres:
+        condition: service_started
+      airflow-init:
+        condition: service_completed_successfully
+      airflow-dag-processor:
+        condition: service_started
+    env_file: .env
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    command: scheduler
+  
+  airflow-dag-processor:
+    image: apache/airflow:3.0.0
+    depends_on:
+      postgres:
+        condition: service_started
+      airflow-init:
+        condition: service_completed_successfully
+    env_file: .env
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    command: dag-processor
+
+volumes:
+  postgres-db-volume:
