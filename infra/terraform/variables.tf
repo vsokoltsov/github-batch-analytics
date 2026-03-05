@@ -10,8 +10,8 @@ variable "aws_profile" {
   default     = "gba-admin"
 }
 
-variable "airflow_code_bucket_name" {
-  description = "Globally unique S3 bucket name for Airflow code artifacts."
+variable "landing_zone_bucket_name" {
+  description = "Globally unique S3 bucket name for landing zone raw data."
   type        = string
 }
 

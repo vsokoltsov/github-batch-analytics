@@ -1,25 +1,25 @@
-resource "aws_s3_bucket" "airflow_code" {
-  bucket = var.airflow_code_bucket_name
+resource "aws_s3_bucket" "landing_zone" {
+  bucket = var.landing_zone_bucket_name
 
   tags = merge(
     var.tags,
     {
-      Name    = var.airflow_code_bucket_name
-      Purpose = "airflow-code-storage"
+      Name    = var.landing_zone_bucket_name
+      Purpose = "landing-zone-storage"
     }
   )
 }
 
-resource "aws_s3_bucket_versioning" "airflow_code" {
-  bucket = aws_s3_bucket.airflow_code.id
+resource "aws_s3_bucket_versioning" "landing_zone" {
+  bucket = aws_s3_bucket.landing_zone.id
 
   versioning_configuration {
     status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "airflow_code" {
-  bucket = aws_s3_bucket.airflow_code.id
+resource "aws_s3_bucket_server_side_encryption_configuration" "landing_zone" {
+  bucket = aws_s3_bucket.landing_zone.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -28,8 +28,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "airflow_code" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "airflow_code" {
-  bucket = aws_s3_bucket.airflow_code.id
+resource "aws_s3_bucket_public_access_block" "landing_zone" {
+  bucket = aws_s3_bucket.landing_zone.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -37,8 +37,8 @@ resource "aws_s3_bucket_public_access_block" "airflow_code" {
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_ownership_controls" "airflow_code" {
-  bucket = aws_s3_bucket.airflow_code.id
+resource "aws_s3_bucket_ownership_controls" "landing_zone" {
+  bucket = aws_s3_bucket.landing_zone.id
 
   rule {
     object_ownership = "BucketOwnerEnforced"
