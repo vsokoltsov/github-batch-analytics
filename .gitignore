@@ -10,3 +10,11 @@ wheels/
 .venv
 .env
 logs/
+terraform.tfvars
+.terraform/
+.terraform.lock.hcl
+.local/
+.mypy_cache/
+.envrc
+terraform.tfstate
+terraform.tfstate.backup
