@@ -1,0 +1,10 @@
+aws_region              = "eu-central-1"
+aws_profile             = "gba-admin"
+airflow_code_bucket_name = "gba-airflow-code-REPLACE_WITH_UNIQUE_SUFFIX"
+
+tags = {
+  Project     = "github-batch-analytics"
+  Environment = "dev"
+  Owner       = "vadim"
+  ManagedBy   = "terraform"
+}
