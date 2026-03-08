@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint (${{ matrix.linter }})
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: dags
+    strategy:
+      matrix:
+        linter: [ty, black, ruff]
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Run selected linter
+        run: |
+          if [ "${{ matrix.linter }}" = "ty" ]; then
+            PYTHONPATH=dags uv run ty check dags/ tests/
+          elif [ "${{ matrix.linter }}" = "black" ]; then
+            uv run black --check dags/ tests/
+          elif [ "${{ matrix.linter }}" = "ruff" ]; then
+            uv run ruff check dags/ tests/
+          else
+            echo "Unknown linter: ${{ matrix.linter }}"
+            exit 1
+          fi
+
+  tests:
+    name: Tests (${{ matrix.test_type }})
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: dags
+    strategy:
+      matrix:
+        test_type: [unit, integration]
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Run ${{ matrix.test_type }} tests
+        run: uv run pytest -m ${{ matrix.test_type }} -q
