@@ -8,6 +8,7 @@ github_actions_branch    = "main"
 manage_github_actions_config = false
 # github_token is sensitive: pass via TF_VAR_github_token env var
 github_token             = "<GITHUB_TOKEN>"
+github_owner             = "<github owner name>"
 
 tags = {
   Project     = "github-batch-analytics"
