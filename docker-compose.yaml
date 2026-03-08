@@ -6,7 +6,9 @@ services:
       - postgres-db-volume:/var/lib/postgresql/data
 
   airflow-init:
-    image: apache/airflow:3.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
     env_file: .env
     depends_on:
       postgres:
@@ -15,11 +17,14 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - ./.local/aws:/home/airflow/.aws:ro
     command: ["airflow", "db", "migrate"]
     restart: "no"
 
   airflow-api-server:
-    image: apache/airflow:3.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       postgres:
         condition: service_started
@@ -30,12 +35,15 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - ./.local/aws:/home/airflow/.aws:ro
     ports:
       - "8080:8080"
     command: api-server
 
   airflow-scheduler:
-    image: apache/airflow:3.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       postgres:
         condition: service_started
@@ -48,10 +56,13 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - ./.local/aws:/home/airflow/.aws:ro
     command: scheduler
   
   airflow-dag-processor:
-    image: apache/airflow:3.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       postgres:
         condition: service_started
