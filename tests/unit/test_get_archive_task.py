@@ -12,18 +12,24 @@ def test_get_github_events_archive_wires_dependencies(monkeypatch):
     fake_settings = Mock()
     fake_settings.S3_LANDING_ZONE_BUCKET_NAME = "gba-landing-zone-test"
     settings_getter = Mock(return_value=fake_settings)
-    monkeypatch.setattr("gba.tasks.get_archive.get_download_archive_settings", settings_getter)
+    monkeypatch.setattr(
+        "gba.tasks.get_archive.get_download_archive_settings", settings_getter
+    )
 
     fake_s3_client = Mock()
     boto_client = Mock(return_value=fake_s3_client)
     monkeypatch.setattr("gba.tasks.get_archive.boto3.client", boto_client)
 
     fake_service = Mock()
-    fake_service.download_and_push_to_s3.return_value = "s3://gba-landing-zone-test/raw/path/events.json.gz"
+    fake_service.download_and_push_to_s3.return_value = (
+        "s3://gba-landing-zone-test/raw/path/events.json.gz"
+    )
     service_ctor = Mock(return_value=fake_service)
     monkeypatch.setattr("gba.tasks.get_archive.DownloadGithubArchive", service_ctor)
 
-    result = get_github_events_archive.function(landing_date=landing_date, archive_url=archive_url)
+    result = get_github_events_archive.function(
+        landing_date=landing_date, archive_url=archive_url
+    )
 
     settings_getter.assert_called_once_with()
     boto_client.assert_called_once_with("s3")

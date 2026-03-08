@@ -10,11 +10,11 @@ if TYPE_CHECKING:
 else:
     S3Client = BaseClient
 
+
 @dataclass
 class DownloadGithubArchive:
     s3_client: S3Client
     bucket_name: str
-
 
     def download_and_push_to_s3(self, logical_date: str, url: str) -> str:
         dt = dt = datetime.fromisoformat(logical_date)
@@ -31,7 +31,7 @@ class DownloadGithubArchive:
 
         # Upload as-is to S3 raw zone
         key = f"raw/gharchive/dt={yyyy_mm_dd}/hr={hour}/events.json.gz"
-        
+
         self.s3_client.put_object(
             Bucket=self.bucket_name,
             Key=key,

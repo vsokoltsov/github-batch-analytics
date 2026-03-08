@@ -26,7 +26,9 @@ def test_get_github_events_archive_integration(monkeypatch):
     response = Mock()
     response.content = body
     response.raise_for_status = Mock()
-    monkeypatch.setattr("gba.services.download_github_archive.requests.get", Mock(return_value=response))
+    monkeypatch.setattr(
+        "gba.services.download_github_archive.requests.get", Mock(return_value=response)
+    )
 
     result = get_github_events_archive.function(
         landing_date="2026-03-07T18:30:09+00:00",

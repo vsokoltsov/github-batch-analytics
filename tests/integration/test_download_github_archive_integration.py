@@ -22,7 +22,9 @@ def test_download_and_push_to_s3_integration(monkeypatch):
     response = Mock()
     response.content = body
     response.raise_for_status = Mock()
-    monkeypatch.setattr("gba.services.download_github_archive.requests.get", Mock(return_value=response))
+    monkeypatch.setattr(
+        "gba.services.download_github_archive.requests.get", Mock(return_value=response)
+    )
 
     service = DownloadGithubArchive(s3_client=s3_client, bucket_name=bucket_name)
     result = service.download_and_push_to_s3(
