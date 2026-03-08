@@ -24,3 +24,9 @@ dev = [
 
 [tool.black]
 target-version = ["py312"]
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: unit test marker",
+    "integration: integration test marker",
+]
