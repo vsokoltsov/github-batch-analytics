@@ -45,6 +45,7 @@ jobs:
   tests:
     name: Tests (${{ matrix.test_type }})
     runs-on: ubuntu-latest
+    needs: [lint]
     env:
       PYTHONPATH: dags
     strategy:
