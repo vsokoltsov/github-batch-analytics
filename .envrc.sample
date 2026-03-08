@@ -1,0 +1,10 @@
+export AWS_CONFIG_FILE="$PWD/.local/aws/config"
+export AWS_SHARED_CREDENTIALS_FILE="$PWD/.local/aws/credentials"
+export AWS_PROFILE="gba-admin"
+export AWS_DEFAULT_REGION="eu-central-1"
+
+export KUBECONFIG="$PWD/.local/kube/config"
+
+export TF_CLI_CONFIG_FILE="$PWD/.local/.terraformrc"
+export TF_DATA_DIR="$PWD/.local/.terraform"
+export PYTHONPATH="$PWD/dags"
