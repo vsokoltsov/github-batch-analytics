@@ -71,7 +71,7 @@ jobs:
         run: uv run pytest -m ${{ matrix.test_type }} -q
 
   build-and-push:
-    name: Build And Push Docker Image
+    name: Build
     runs-on: ubuntu-latest
     needs: [lint, tests]
     if: github.event_name == 'push'
