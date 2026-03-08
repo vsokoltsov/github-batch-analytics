@@ -1,7 +1,13 @@
 aws_region              = "eu-central-1"
 aws_profile             = "gba-admin"
-airflow_code_bucket_name = "gba-airflow-code-REPLACE_WITH_UNIQUE_SUFFIX"
 landing_zone_bucket_name = "gba-landing-zone-REPLACE_WITH_UNIQUE_SUFFIX"
+ecr_repository_name      = "github-batch-analytics-airflow"
+github_owner             = "REPLACE_WITH_GITHUB_OWNER"
+github_repository        = "github-batch-analytics"
+github_actions_branch    = "main"
+manage_github_actions_config = false
+# github_token is sensitive: pass via TF_VAR_github_token env var
+github_token             = "<GITHUB_TOKEN>"
 
 tags = {
   Project     = "github-batch-analytics"
