@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
     "apache-airflow[amazon,postgres]>=3.1.7",
+    "apache-airflow-providers-apache-spark>=5.3.3",
     "boto3>=1.42.60",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
