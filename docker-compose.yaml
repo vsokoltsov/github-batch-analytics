@@ -10,11 +10,14 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file: .env
+    environment:
+      AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
     depends_on:
       postgres:
         condition: service_started
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./spark/jobs:/opt/spark/jobs
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
@@ -31,8 +34,11 @@ services:
       airflow-init:
         condition: service_completed_successfully
     env_file: .env
+    environment:
+      AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./spark/jobs:/opt/spark/jobs
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
@@ -52,11 +58,15 @@ services:
       airflow-dag-processor:
         condition: service_started
     env_file: .env
+    environment:
+      AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./spark/jobs:/opt/spark/jobs
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
+      - spark-ivy-cache:/home/airflow/.ivy2
     command: scheduler
   
   airflow-dag-processor:
@@ -69,11 +79,46 @@ services:
       airflow-init:
         condition: service_completed_successfully
     env_file: .env
+    environment:
+      AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./spark/jobs:/opt/spark/jobs
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - ./.local/aws:/home/airflow/.aws:ro
     command: dag-processor
+
+  spark-master:
+    image: apache/spark:3.5.4-scala2.12-java17-python3-ubuntu
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
+    env_file: .env
+    environment:
+      AWS_SHARED_CREDENTIALS_FILE: /home/spark/.aws/credentials
+    ports:
+      - "7077:7077"
+      - "8081:8080"
+    volumes:
+      - ./spark/jobs:/opt/spark/jobs
+      - ./.local/aws:/home/spark/.aws:ro
+
+  spark-worker:
+    image: apache/spark:3.5.4-scala2.12-java17-python3-ubuntu
+    depends_on:
+      - spark-master
+    env_file: .env
+    environment:
+      AWS_SHARED_CREDENTIALS_FILE: /home/spark/.aws/credentials
+    command:
+      [
+        "/opt/spark/bin/spark-class",
+        "org.apache.spark.deploy.worker.Worker",
+        "spark://spark-master:7077"
+      ]
+    volumes:
+      - ./spark/jobs:/opt/spark/jobs
+      - ./.local/aws:/home/spark/.aws:ro
 
 volumes:
   postgres-db-volume:
+  spark-ivy-cache:
