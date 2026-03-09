@@ -15,6 +15,11 @@ variable "landing_zone_bucket_name" {
   type        = string
 }
 
+variable "bronze_zone_bucket_name" {
+  description = "Globally unique S3 bucket name for bronze-layer transformed data."
+  type        = string
+}
+
 variable "ecr_repository_name" {
   description = "ECR repository name for Airflow image artifacts."
   type        = string
