@@ -38,4 +38,4 @@ class DownloadGithubArchive:
             Body=resp.content,
             ContentType="application/gzip",
         )
-        return f"s3://{self.bucket_name}/{key}"
+        return f"s3a://{self.bucket_name}/{key}"
