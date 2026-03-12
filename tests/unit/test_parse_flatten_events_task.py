@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import cast
 from unittest.mock import Mock
 
 import pytest
@@ -23,16 +24,26 @@ class TestParseFlattenEventsTaskUnit:
         )
 
         task = get_parse_flatten_events_task(
-            "s3://landing/raw/events.json.gz", dt="{{ ds }}", hour="{{ logical_date.hour }}"
+            "s3://landing/raw/events.json.gz",
+            dt="{{ ds }}",
+            hour="{{ logical_date.hour }}",
         )
 
         assert isinstance(task, SparkSubmitOperator)
         assert task.task_id == "parse_flatten_events"
         assert task._conn_id == "spark_default"
         assert task.application == "/opt/airflow/dags/gba/services/parse_flatten.py"
-        assert task.application_args[0] == "--input-path"
-        assert task.application_args[1] == "s3://landing/raw/events.json.gz"
-        assert task.application_args[2] == "--output-path"
-        assert "s3a://gba-bronze-zone-test/gh_events_flat" in task.application_args[3]
-        assert task.conf["spark.master"] == "spark://spark-master:7077"
-        assert task.conf["spark.executorEnv.PYTHONPATH"] == "/opt/airflow/dags"
+
+        app_args = task.application_args
+        assert app_args is not None
+        app_args = cast(list[str], app_args)
+        assert app_args[0] == "--input-path"
+        assert app_args[1] == "s3://landing/raw/events.json.gz"
+        assert app_args[2] == "--output-path"
+        assert "s3a://gba-bronze-zone-test/gh_events_flat" in app_args[3]
+
+        conf = task.conf
+        assert conf is not None
+        conf = cast(dict[str, str], conf)
+        assert conf["spark.master"] == "spark://spark-master:7077"
+        assert conf["spark.executorEnv.PYTHONPATH"] == "/opt/airflow/dags"

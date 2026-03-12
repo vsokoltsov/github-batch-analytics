@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import cast
 
 from airflow import DAG
+from airflow.utils.context import Context
 import pendulum
 import pytest
 
@@ -34,12 +36,18 @@ class TestParseFlattenEventsTaskIntegration:
                 hour="{{ logical_date.hour }}",
             )
 
-        context = {
-            "ds": "2026-03-08",
-            "logical_date": pendulum.datetime(2026, 3, 8, 20, tz="UTC"),
-        }
+        context = cast(
+            Context,
+            {
+                "ds": "2026-03-08",
+                "logical_date": pendulum.datetime(2026, 3, 8, 20, tz="UTC"),
+            },
+        )
         task.render_template_fields(context=context)
 
         assert task.dag is not None
         assert task.task_id in task.dag.task_dict
-        assert task.application_args[3].endswith("dt=2026-03-08/hr=20/")
+        app_args = task.application_args
+        assert app_args is not None
+        app_args = cast(list[str], app_args)
+        assert app_args[3].endswith("dt=2026-03-08/hr=20/")

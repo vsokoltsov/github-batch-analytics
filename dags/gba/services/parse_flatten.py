@@ -37,6 +37,7 @@ class ParseService:
 
         flattened_df.write.mode("overwrite").parquet(self.output_path)
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Parse and flatten GH Archive events")
     parser.add_argument("--input-path", required=True)
@@ -47,11 +48,7 @@ def main() -> None:
 
     input_path = _to_s3a(args.input_path)
     output_path = _to_s3a(args.output_path)
-    service = ParseService(
-        spark=spark,
-        input_path=input_path,
-        output_path=output_path
-    )
+    service = ParseService(spark=spark, input_path=input_path, output_path=output_path)
     service.flat()
     spark.stop()
 

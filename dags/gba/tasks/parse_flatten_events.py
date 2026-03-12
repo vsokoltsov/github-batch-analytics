@@ -5,7 +5,9 @@ from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOpe
 from gba.settings.parse_flatten import get_parse_flatten_settings
 
 
-def get_parse_flatten_events_task(input_path: str | XComArg, dt: str, hour: str) -> SparkSubmitOperator:
+def get_parse_flatten_events_task(
+    input_path: str | XComArg, dt: str, hour: str
+) -> SparkSubmitOperator:
     settings = get_parse_flatten_settings()
 
     return SparkSubmitOperator(

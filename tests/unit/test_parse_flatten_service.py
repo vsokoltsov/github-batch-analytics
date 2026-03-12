@@ -44,4 +44,6 @@ class TestParseFlattenServiceUnit:
 
         spark.read.json.assert_called_once_with("s3a://landing/raw/events.json.gz")
         enriched_df.write.mode.assert_called_once_with("overwrite")
-        enriched_df.write.parquet.assert_called_once_with("s3a://bronze/gh_events_flat/")
+        enriched_df.write.parquet.assert_called_once_with(
+            "s3a://bronze/gh_events_flat/"
+        )

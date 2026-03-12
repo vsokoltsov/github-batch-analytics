@@ -20,9 +20,7 @@ with DAG(
     )
 
     parse_flatten_step = get_parse_flatten_events_task(
-        input_path=download_step,
-        dt="{{ ds }}",
-        hour="{{ logical_date.hour }}"
+        input_path=download_step, dt="{{ ds }}", hour="{{ logical_date.hour }}"
     )
 
     download_step >> parse_flatten_step

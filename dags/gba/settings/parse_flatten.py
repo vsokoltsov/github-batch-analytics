@@ -1,5 +1,6 @@
 from functools import lru_cache
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
+
 
 class ParseFlattenSettings(BaseSettings):
     S3_BRONZE_ZONE_BUCKET_NAME: str
@@ -8,6 +9,7 @@ class ParseFlattenSettings(BaseSettings):
     AWS_SHARED_CREDENTIALS_FILE: str
     SPARK_MASTER_URL: str
 
+
 @lru_cache(maxsize=1)
 def get_parse_flatten_settings() -> ParseFlattenSettings:
-    return ParseFlattenSettings() # type: ignore[call-arg]
+    return ParseFlattenSettings()  # type: ignore[call-arg]
