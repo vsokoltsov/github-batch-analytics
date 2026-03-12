@@ -1,3 +1,6 @@
+install-kernel:
+	uv run python -m ipykernel install --user --name=github-batch-analytics --display-name="GitHub Batch Analytics"
+
 ty:
 	uv run ty check dags/ tests/
 
@@ -12,3 +15,6 @@ ruff:
 
 lint:
 	make ty & make black-fix & make ruff
+
+notebook:
+	PYTHONPATH=. uv run jupyter lab
