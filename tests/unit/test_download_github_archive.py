@@ -41,7 +41,7 @@ class TestDownloadGithubArchiveUnit:
         )
         assert (
             result
-            == "s3://gba-landing-zone-test/raw/gharchive/dt=2026-03-07/hr=18/events.json.gz"
+            == "s3a://gba-landing-zone-test/raw/gharchive/dt=2026-03-07/hr=18/events.json.gz"
         )
 
     def test_download_and_push_to_s3_http_error(self, monkeypatch):

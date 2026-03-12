@@ -40,7 +40,7 @@ class TestGetArchiveTaskIntegration:
         )
 
         expected_key = "raw/gharchive/dt=2026-03-07/hr=18/events.json.gz"
-        assert result == f"s3://{bucket_name}/{expected_key}"
+        assert result == f"s3a://{bucket_name}/{expected_key}"
 
         uploaded = s3_client.get_object(Bucket=bucket_name, Key=expected_key)
         assert uploaded["Body"].read() == body

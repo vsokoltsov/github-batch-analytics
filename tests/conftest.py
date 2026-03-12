@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 
@@ -15,6 +16,10 @@ def _ensure_dags_on_path() -> None:
 
 
 _ensure_dags_on_path()
+
+# PySpark/py4j may log during interpreter teardown when handlers are already
+# closed. Keep py4j logging quiet in tests to avoid noisy shutdown warnings.
+logging.getLogger("py4j").setLevel(logging.ERROR)
 
 
 @pytest.fixture(autouse=True)
