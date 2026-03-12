@@ -12,12 +12,12 @@ services:
     env_file: .env
     environment:
       AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
+      PYTHONPATH: /opt/airflow/dags
     depends_on:
       postgres:
         condition: service_started
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./spark/jobs:/opt/spark/jobs
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
@@ -36,9 +36,9 @@ services:
     env_file: .env
     environment:
       AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
+      PYTHONPATH: /opt/airflow/dags
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./spark/jobs:/opt/spark/jobs
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
@@ -60,9 +60,9 @@ services:
     env_file: .env
     environment:
       AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
+      PYTHONPATH: /opt/airflow/dags
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./spark/jobs:/opt/spark/jobs
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
@@ -81,9 +81,9 @@ services:
     env_file: .env
     environment:
       AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
+      PYTHONPATH: /opt/airflow/dags
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./spark/jobs:/opt/spark/jobs
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
@@ -92,22 +92,40 @@ services:
   spark-master:
     image: apache/spark:3.5.4-scala2.12-java17-python3-ubuntu
     command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
+    depends_on:
+      postgres:
+        condition: service_started
+      airflow-scheduler:
+        condition: service_started
+      airflow-api-server:
+        condition: service_started
     env_file: .env
     environment:
+      PYTHONPATH: /opt/airflow/dags
+      AWS_CONFIG_FILE: /home/spark/.aws/config
       AWS_SHARED_CREDENTIALS_FILE: /home/spark/.aws/credentials
     ports:
       - "7077:7077"
       - "8081:8080"
     volumes:
-      - ./spark/jobs:/opt/spark/jobs
+      - ./dags:/opt/airflow/dags
       - ./.local/aws:/home/spark/.aws:ro
 
   spark-worker:
     image: apache/spark:3.5.4-scala2.12-java17-python3-ubuntu
     depends_on:
-      - spark-master
+      spark-master:
+        condition: service_started
+      airflow-scheduler:
+        condition: service_started
+      airflow-api-server:
+        condition: service_started
+      postgres:
+        condition: service_started
     env_file: .env
     environment:
+      PYTHONPATH: /opt/airflow/dags
+      AWS_CONFIG_FILE: /home/spark/.aws/config
       AWS_SHARED_CREDENTIALS_FILE: /home/spark/.aws/credentials
     command:
       [
@@ -116,7 +134,7 @@ services:
         "spark://spark-master:7077"
       ]
     volumes:
-      - ./spark/jobs:/opt/spark/jobs
+      - ./dags:/opt/airflow/dags
       - ./.local/aws:/home/spark/.aws:ro
 
 volumes:
