@@ -17,7 +17,10 @@ dependencies = [
 dev = [
     "black>=26.3.0",
     "boto3-stubs[full]>=1.42.63",
+    "ipykernel>=7.1.0",
+    "jupyterlab>=4.4.10",
     "moto[s3]>=5.1.15",
+    "pyspark==3.5.4",
     "pytest>=8.4.2",
     "ruff>=0.15.5",
     "ty>=0.0.20",
