@@ -9,6 +9,8 @@ wheels/
 # Virtual environments
 .venv
 .env
+.env.spark
+.env.aws
 logs/
 terraform.tfvars
 .terraform/
@@ -20,3 +22,6 @@ terraform.tfstate
 terraform.tfstate.backup
 vendored/
 .ipynb_checkpoints
+.virtual_documents/
+.pytest_cache/
+.ruff_cache/
