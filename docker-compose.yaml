@@ -4,15 +4,21 @@ services:
     env_file: .env
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
+    restart: unless-stopped
 
   airflow-init:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file: .env
+    env_file:
+      - .env
     environment:
       AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
       PYTHONPATH: /opt/airflow/dags
+      AWS_PROFILE: gba-admin
+      AWS_CONFIG_FILE: /home/airflow/.aws/config
+      AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
+      SPARK_MASTER_URL: spark://spark-master:7077
     depends_on:
       postgres:
         condition: service_started
@@ -33,10 +39,16 @@ services:
         condition: service_started
       airflow-init:
         condition: service_completed_successfully
-    env_file: .env
+    env_file:
+      - .env
+      - .env.spark
     environment:
       AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
       PYTHONPATH: /opt/airflow/dags
+      AWS_PROFILE: gba-admin
+      AWS_CONFIG_FILE: /home/airflow/.aws/config
+      AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
+      SPARK_MASTER_URL: spark://spark-master:7077
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -45,6 +57,7 @@ services:
     ports:
       - "8080:8080"
     command: api-server
+    restart: unless-stopped
 
   airflow-scheduler:
     build:
@@ -57,10 +70,16 @@ services:
         condition: service_completed_successfully
       airflow-dag-processor:
         condition: service_started
-    env_file: .env
+    env_file:
+      - .env
+      - .env.spark
     environment:
       AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
       PYTHONPATH: /opt/airflow/dags
+      AWS_PROFILE: gba-admin
+      AWS_CONFIG_FILE: /home/airflow/.aws/config
+      AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
+      SPARK_MASTER_URL: spark://spark-master:7077
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -68,6 +87,7 @@ services:
       - ./.local/aws:/home/airflow/.aws:ro
       - spark-ivy-cache:/home/airflow/.ivy2
     command: scheduler
+    restart: unless-stopped
   
   airflow-dag-processor:
     build:
@@ -78,16 +98,23 @@ services:
         condition: service_started
       airflow-init:
         condition: service_completed_successfully
-    env_file: .env
+    env_file:
+      - .env
+      - .env.spark
     environment:
       AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
       PYTHONPATH: /opt/airflow/dags
+      AWS_PROFILE: gba-admin
+      AWS_CONFIG_FILE: /home/airflow/.aws/config
+      AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
+      SPARK_MASTER_URL: spark://spark-master:7077
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
     command: dag-processor
+    restart: unless-stopped
 
   spark-master:
     image: apache/spark:3.5.4-scala2.12-java17-python3-ubuntu
@@ -99,7 +126,7 @@ services:
         condition: service_started
       airflow-api-server:
         condition: service_started
-    env_file: .env
+    env_file: .env.spark
     environment:
       PYTHONPATH: /opt/airflow/dags
       AWS_CONFIG_FILE: /home/spark/.aws/config
@@ -110,6 +137,7 @@ services:
     volumes:
       - ./dags:/opt/airflow/dags
       - ./.local/aws:/home/spark/.aws:ro
+    restart: unless-stopped
 
   spark-worker:
     image: apache/spark:3.5.4-scala2.12-java17-python3-ubuntu
@@ -122,7 +150,7 @@ services:
         condition: service_started
       postgres:
         condition: service_started
-    env_file: .env
+    env_file: .env.spark
     environment:
       PYTHONPATH: /opt/airflow/dags
       AWS_CONFIG_FILE: /home/spark/.aws/config
@@ -135,6 +163,43 @@ services:
       ]
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./.local/aws:/home/spark/.aws:ro
+    restart: unless-stopped
+
+  notebook:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
+    depends_on:
+      spark-master:
+        condition: service_started
+      spark-worker:
+        condition: service_started
+    env_file: .env.spark
+    environment:
+      PYTHONPATH: /workspace
+      HOME: /tmp/spark-home
+      JUPYTER_CONFIG_DIR: /tmp/jupyter/config
+      JUPYTER_DATA_DIR: /tmp/jupyter/data
+      JUPYTER_RUNTIME_DIR: /tmp/jupyter/runtime
+      IPYTHONDIR: /tmp/ipython
+      AWS_PROFILE: ${AWS_PROFILE:-gba-admin}
+      AWS_SDK_LOAD_CONFIG: "1"
+      AWS_CONFIG_FILE: /home/spark/.aws/config
+      AWS_SHARED_CREDENTIALS_FILE: /home/spark/.aws/credentials
+      SPARK_MASTER_URL: spark://spark-master:7077
+    working_dir: /workspace
+    ports:
+      - "8888:8888"
+    command:
+      [
+        "sh",
+        "-lc",
+        "mkdir -p /tmp/spark-home /tmp/jupyter/config /tmp/jupyter/data /tmp/jupyter/runtime /tmp/ipython && jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --IdentityProvider.token='' --ServerApp.password=''"
+      ]
+    volumes:
+      - ./:/workspace
       - ./.local/aws:/home/spark/.aws:ro
 
 volumes:

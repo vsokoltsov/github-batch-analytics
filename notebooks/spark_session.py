@@ -25,10 +25,13 @@ def _resolve_aws_paths() -> tuple[str, str]:
 
 def create_spark_session(
     app_name: str = "gba-notebook",
-    master: str = "spark://localhost:7077",
+    master: str | None = None,
     aws_profile: str = "gba-admin",
 ) -> SparkSession:
+    resolved_master = master or os.environ.get("SPARK_MASTER_URL", "spark://localhost:7077")
     aws_config, aws_credentials = _resolve_aws_paths()
+    ivy_dir = "/tmp/jupyter/ivy"
+    os.makedirs(ivy_dir, exist_ok=True)
 
     # Local notebook kernel runs on host machine. Force host-valid AWS paths.
     os.environ["AWS_PROFILE"] = aws_profile
@@ -46,12 +49,13 @@ def create_spark_session(
     frozen = creds.get_frozen_credentials()
 
     spark = (
-        SparkSession.builder.master(master)
+        SparkSession.builder.master(resolved_master)
         .appName(app_name)
         .config(
             "spark.jars.packages",
             "org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262",
         )
+        .config("spark.jars.ivy", ivy_dir)
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config(
             "spark.hadoop.fs.s3a.access.key",

@@ -1,0 +1,19 @@
+FROM apache/spark:3.5.4-scala2.12-java17-python3-ubuntu
+
+USER root
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends procps \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m pip install --no-cache-dir \
+  jupyterlab \
+  jupyterlab-lsp \
+  ipykernel \
+  boto3 \
+  pyspark==3.5.4 \
+  python-lsp-server \
+  jedi \
+  jedi-language-server
+
+USER spark
