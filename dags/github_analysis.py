@@ -23,23 +23,20 @@ with DAG(
     parse_flatten_step = get_parse_flatten_events_task(
         input_path=download_step, dt="{{ ds }}", hour="{{ logical_date.hour }}"
     )
-    parse_flatten_task  = parse_flatten_step.task 
+    parse_flatten_task = parse_flatten_step.task
 
     repo_candidates = build_repo_candidates(
         input_path=parse_flatten_step.output_path,
         dt="{{ ds }}",
-        hour="{{ logical_date.hour }}"
+        hour="{{ logical_date.hour }}",
     )
     org_candidates = build_org_candidates(
         input_path=parse_flatten_step.output_path,
         dt="{{ ds }}",
-        hour="{{ logical_date.hour }}"
+        hour="{{ logical_date.hour }}",
     )
     repo_task = repo_candidates.task
     org_task = org_candidates.task
 
     download_step >> parse_flatten_task
-    parse_flatten_task >> [
-        repo_task,
-        org_task
-    ]
+    parse_flatten_task >> [repo_task, org_task]

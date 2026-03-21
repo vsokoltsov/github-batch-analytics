@@ -3,11 +3,15 @@ from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOpe
 from typing import NamedTuple
 from gba.settings.build_candidates import get_build_candidates_settings, CandidatesType
 
+
 class BuildCandidateEvent(NamedTuple):
     task: SparkSubmitOperator
     output_path: str
 
-def build_repo_candidates(input_path: str | XComArg, dt: str, hour: str) -> BuildCandidateEvent:
+
+def build_repo_candidates(
+    input_path: str | XComArg, dt: str, hour: str
+) -> BuildCandidateEvent:
     settings = get_build_candidates_settings()
     output_path = f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/repo_candidates/dt={dt}/hr={hour}/"
     task = SparkSubmitOperator(
@@ -24,7 +28,7 @@ def build_repo_candidates(input_path: str | XComArg, dt: str, hour: str) -> Buil
             "--dt",
             dt,
             "--hr",
-            hour
+            hour,
         ],
         packages=(
             "org.apache.hadoop:hadoop-aws:3.3.4,"
@@ -48,14 +52,16 @@ def build_repo_candidates(input_path: str | XComArg, dt: str, hour: str) -> Buil
             "spark.executorEnv.PYTHONPATH": "/opt/airflow/dags",
         },
     )
-    return BuildCandidateEvent(
-        task=task,
-        output_path=output_path
-    )
+    return BuildCandidateEvent(task=task, output_path=output_path)
 
-def build_org_candidates(input_path: str | XComArg, dt: str, hour: str) -> BuildCandidateEvent:
+
+def build_org_candidates(
+    input_path: str | XComArg, dt: str, hour: str
+) -> BuildCandidateEvent:
     settings = get_build_candidates_settings()
-    output_path = f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/org_candidates/dt={dt}/hr={hour}/"
+    output_path = (
+        f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/org_candidates/dt={dt}/hr={hour}/"
+    )
     task = SparkSubmitOperator(
         task_id="build_org_candidates",
         conn_id="spark_default",
@@ -70,7 +76,7 @@ def build_org_candidates(input_path: str | XComArg, dt: str, hour: str) -> Build
             "--dt",
             dt,
             "--hr",
-            hour
+            hour,
         ],
         packages=(
             "org.apache.hadoop:hadoop-aws:3.3.4,"
@@ -94,7 +100,4 @@ def build_org_candidates(input_path: str | XComArg, dt: str, hour: str) -> Build
             "spark.executorEnv.PYTHONPATH": "/opt/airflow/dags",
         },
     )
-    return BuildCandidateEvent(
-        task=task,
-        output_path=output_path
-    )
+    return BuildCandidateEvent(task=task, output_path=output_path)

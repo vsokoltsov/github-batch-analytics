@@ -4,9 +4,11 @@ from typing import cast
 from unittest.mock import Mock
 
 import pytest
-from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
-from gba.tasks.parse_flatten_events import get_parse_flatten_events_task, ParseFLattenEvents
+from gba.tasks.parse_flatten_events import (
+    get_parse_flatten_events_task,
+    ParseFLattenEvents,
+)
 
 
 @pytest.mark.unit
@@ -32,7 +34,9 @@ class TestParseFlattenEventsTaskUnit:
         assert isinstance(task, ParseFLattenEvents)
         assert task.task.task_id == "parse_flatten_events"
         assert task.task._conn_id == "spark_default"
-        assert task.task.application == "/opt/airflow/dags/gba/services/parse_flatten.py"
+        assert (
+            task.task.application == "/opt/airflow/dags/gba/services/parse_flatten.py"
+        )
 
         app_args = task.task.application_args
         assert app_args is not None

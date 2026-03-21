@@ -93,8 +93,13 @@ class TestGithubAnalysisDag:
         repo_task = dag.task_dict["build_repo_candidates"]
         org_task = dag.task_dict["build_org_candidates"]
 
-        assert repo_task.application == "/opt/airflow/dags/gba/services/build_candidates.py"
-        assert org_task.application == "/opt/airflow/dags/gba/services/build_candidates.py"
+        assert (
+            repo_task.application
+            == "/opt/airflow/dags/gba/services/build_candidates.py"
+        )
+        assert (
+            org_task.application == "/opt/airflow/dags/gba/services/build_candidates.py"
+        )
         assert repo_task.application_args is not None
         assert org_task.application_args is not None
 
@@ -125,8 +130,14 @@ class TestGithubAnalysisDag:
         task.render_template_fields(context)
 
         assert task.application_args is not None
-        assert task.application_args[1] == "s3a://test-bronze/gh_events_flat/dt=2026-03-20/hr=21/"
-        assert task.application_args[3] == "s3a://test-silver/repo_candidates/dt=2026-03-20/hr=21/"
+        assert (
+            task.application_args[1]
+            == "s3a://test-bronze/gh_events_flat/dt=2026-03-20/hr=21/"
+        )
+        assert (
+            task.application_args[3]
+            == "s3a://test-silver/repo_candidates/dt=2026-03-20/hr=21/"
+        )
         assert task.application_args[5] == "repo"
 
     def test_dag_has_no_cycles(self, dag):

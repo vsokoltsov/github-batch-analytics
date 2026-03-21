@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 
+from typing import cast, Any
 from dataclasses import dataclass
 from pyspark.sql import Column
 from pyspark.sql import SparkSession
@@ -89,7 +90,8 @@ def main() -> None:
     parser.add_argument("--output-path", required=True)
     args = parser.parse_args()
 
-    spark = SparkSession.builder.appName("gharchive-parse-flatten").getOrCreate() # type: ignore[attr-defined]
+    builder = cast(Any, SparkSession.builder)
+    spark = builder.appName("gharchive-parse-flatten").getOrCreate()
 
     input_path = _to_s3a(args.input_path)
     output_path = _to_s3a(args.output_path)

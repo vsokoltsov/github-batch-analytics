@@ -5,6 +5,7 @@ from pathlib import Path
 
 import boto3
 
+from typing import cast, Any
 from pyspark.sql import SparkSession
 
 
@@ -48,8 +49,9 @@ def create_spark_session(
         raise ValueError(f"No AWS credentials found for profile: {aws_profile}")
     frozen = creds.get_frozen_credentials()
 
+    builder = cast(Any, SparkSession.builder)
     spark = (
-        SparkSession.builder.master(resolved_master)
+        builder.master(resolved_master)
         .appName(app_name)
         .config(
             "spark.jars.packages",

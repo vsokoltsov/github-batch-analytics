@@ -84,7 +84,10 @@ class TestBuildCandidatesServiceUnit:
         spark.read.parquet.assert_called_once_with("s3a://bronze/input/")
         assert service.df is df
         assert len(service.event_columns) == 2
-        assert set(service.ratio_columns) == {"push_events_ratio", "issues_events_ratio"}
+        assert set(service.ratio_columns) == {
+            "push_events_ratio",
+            "issues_events_ratio",
+        }
 
     def test_repositories_writes_output(self):
         service = object.__new__(BuildCandidates)
@@ -151,7 +154,9 @@ class TestBuildCandidatesServiceUnit:
 
         service = Mock(spec=BuildCandidates)
         service_ctor = Mock(return_value=service)
-        monkeypatch.setattr("gba.services.build_candidates.BuildCandidates", service_ctor)
+        monkeypatch.setattr(
+            "gba.services.build_candidates.BuildCandidates", service_ctor
+        )
 
         main()
 
@@ -190,7 +195,9 @@ class TestBuildCandidatesServiceUnit:
         )
 
         service = Mock(spec=BuildCandidates)
-        monkeypatch.setattr("gba.services.build_candidates.BuildCandidates", Mock(return_value=service))
+        monkeypatch.setattr(
+            "gba.services.build_candidates.BuildCandidates", Mock(return_value=service)
+        )
 
         main()
 
