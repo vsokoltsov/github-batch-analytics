@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import cast
 
 from airflow import DAG
-from airflow.utils.context import Context
+from airflow.sdk.definitions.context import Context
 import pendulum
 import pytest
 
@@ -30,11 +30,12 @@ class TestParseFlattenEventsTaskIntegration:
             schedule=None,
             catchup=False,
         ):
-            task = get_parse_flatten_events_task(
+            event = get_parse_flatten_events_task(
                 "s3://landing/raw/events.json.gz",
                 dt="{{ ds }}",
                 hour="{{ logical_date.hour }}",
             )
+            task = event.task
 
         context = cast(
             Context,
