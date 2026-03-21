@@ -6,7 +6,7 @@ from unittest.mock import Mock
 import pytest
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
-from gba.tasks.parse_flatten_events import get_parse_flatten_events_task
+from gba.tasks.parse_flatten_events import get_parse_flatten_events_task, ParseFLattenEvents
 
 
 @pytest.mark.unit
@@ -29,12 +29,12 @@ class TestParseFlattenEventsTaskUnit:
             hour="{{ logical_date.hour }}",
         )
 
-        assert isinstance(task, SparkSubmitOperator)
-        assert task.task_id == "parse_flatten_events"
-        assert task._conn_id == "spark_default"
-        assert task.application == "/opt/airflow/dags/gba/services/parse_flatten.py"
+        assert isinstance(task, ParseFLattenEvents)
+        assert task.task.task_id == "parse_flatten_events"
+        assert task.task._conn_id == "spark_default"
+        assert task.task.application == "/opt/airflow/dags/gba/services/parse_flatten.py"
 
-        app_args = task.application_args
+        app_args = task.task.application_args
         assert app_args is not None
         app_args = cast(list[str], app_args)
         assert app_args[0] == "--input-path"
@@ -42,7 +42,7 @@ class TestParseFlattenEventsTaskUnit:
         assert app_args[2] == "--output-path"
         assert "s3a://gba-bronze-zone-test/gh_events_flat" in app_args[3]
 
-        conf = task.conf
+        conf = task.task.conf
         assert conf is not None
         conf = cast(dict[str, str], conf)
         assert conf["spark.master"] == "spark://spark-master:7077"

@@ -8,6 +8,9 @@ import pytest
 from airflow.models import DagBag
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.sdk.definitions.context import Context
+from gba.settings.parse_flatten import get_parse_flatten_settings
+from gba.settings.build_candidates import get_build_candidates_settings
+from gba.settings.get_archive import get_download_archive_settings
 
 DAG_ID = "github_batch_analysis"
 DAG_FILE = Path(__file__).resolve().parents[2] / "dags" / "github_analysis.py"
@@ -25,6 +28,9 @@ TEST_ENV = {
 @pytest.fixture()
 def dagbag() -> DagBag:
     with patch.dict("os.environ", TEST_ENV, clear=False):
+        get_download_archive_settings.cache_clear()
+        get_parse_flatten_settings.cache_clear()
+        get_build_candidates_settings.cache_clear()
         return DagBag(dag_folder=str(DAG_FILE), include_examples=False)
 
 
