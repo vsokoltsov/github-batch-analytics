@@ -1,16 +1,21 @@
 from __future__ import annotations
 
+from typing import NamedTuple
 from airflow.models.xcom_arg import XComArg
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from gba.settings.parse_flatten import get_parse_flatten_settings
 
+class ParseFLattenEvents(NamedTuple):
+    task: SparkSubmitOperator
+    output_path: str
 
 def get_parse_flatten_events_task(
     input_path: str | XComArg, dt: str, hour: str
-) -> SparkSubmitOperator:
+) -> ParseFLattenEvents:
     settings = get_parse_flatten_settings()
 
-    return SparkSubmitOperator(
+    output_path = f"s3a://{settings.S3_BRONZE_ZONE_BUCKET_NAME}/gh_events_flat/dt={dt}/hr={hour}/"
+    task = SparkSubmitOperator(
         task_id="parse_flatten_events",
         conn_id="spark_default",
         application="/opt/airflow/dags/gba/services/parse_flatten.py",
@@ -18,7 +23,7 @@ def get_parse_flatten_events_task(
             "--input-path",
             input_path,
             "--output-path",
-            f"s3a://{settings.S3_BRONZE_ZONE_BUCKET_NAME}/gh_events_flat/dt={dt}/hr={hour}/",
+            output_path,
         ],
         packages=(
             "org.apache.hadoop:hadoop-aws:3.3.4,"
@@ -41,4 +46,7 @@ def get_parse_flatten_events_task(
             ),
             "spark.executorEnv.PYTHONPATH": "/opt/airflow/dags",
         },
+    )
+    return ParseFLattenEvents(
+        task=task, output_path=output_path
     )
