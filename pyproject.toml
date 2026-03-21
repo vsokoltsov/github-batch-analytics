@@ -26,6 +26,12 @@ dev = [
     "ty>=0.0.20",
 ]
 
+[tool.pyright]
+extraPaths = ["dags"]
+
+[tool.ty.environment]
+extra-paths = ["./dags"]
+
 [tool.black]
 target-version = ["py312"]
 
