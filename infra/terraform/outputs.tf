@@ -18,6 +18,16 @@ output "bronze_zone_bucket_arn" {
   value       = aws_s3_bucket.bronze_zone.arn
 }
 
+output "silver_zone_bucket_name" {
+  description = "S3 bucket name for silver zone."
+  value       = aws_s3_bucket.silver_zone.bucket
+}
+
+output "silver_zone_bucket_arn" {
+  description = "S3 bucket ARN for silver zone."
+  value       = aws_s3_bucket.silver_zone.arn
+}
+
 output "ecr_repository_name" {
   description = "ECR repository name for Airflow image."
   value       = aws_ecr_repository.airflow.name
