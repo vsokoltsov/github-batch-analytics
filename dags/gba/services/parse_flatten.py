@@ -89,7 +89,7 @@ def main() -> None:
     parser.add_argument("--output-path", required=True)
     args = parser.parse_args()
 
-    spark = SparkSession.builder.appName("gharchive-parse-flatten").getOrCreate()
+    spark = SparkSession.builder.appName("gharchive-parse-flatten").getOrCreate() # type: ignore[attr-defined]
 
     input_path = _to_s3a(args.input_path)
     output_path = _to_s3a(args.output_path)
