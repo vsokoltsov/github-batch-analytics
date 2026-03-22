@@ -49,14 +49,14 @@ class ParseService:
         schema = source_df.schema
         flattened_df = (
             source_df.select(
-                col("id").alias("event_id"),
+                col("id").cast("bigint").alias("event_id"),
                 col("type").alias("event_type"),
                 col("created_at"),
-                col("repo.id").alias("repo_id"),
+                col("repo.id").cast("bigint").alias("repo_id"),
                 col("repo.name").alias("repo_full_name"),
-                col("actor.id").alias("actor_id"),
+                col("actor.id").cast("bigint").alias("actor_id"),
                 col("actor.login").alias("actor_login"),
-                col("org.id").alias("org_id"),
+                col("org.id").cast("bigint").alias("org_id"),
                 col("org.login").alias("org_login"),
                 col("org.url").alias("org_url"),
                 col("org.avatar_url").alias("org_avatar_url"),
