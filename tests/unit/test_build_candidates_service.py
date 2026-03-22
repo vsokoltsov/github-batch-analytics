@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from typing import Any
 from argparse import Namespace
+from datetime import date
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from pyspark.sql.types import BooleanType, LongType, StringType, StructField, StructType
 
 from gba.services.build_candidates import (
     BuildCandidates,
@@ -14,32 +16,40 @@ from gba.services.build_candidates import (
     main,
 )
 
+INPUT_SCHEMA = StructType(
+    [
+        StructField("event_id", LongType(), True),
+        StructField("event_type", StringType(), True),
+        StructField("created_at", StringType(), True),
+        StructField("repo_id", LongType(), True),
+        StructField("repo_full_name", StringType(), True),
+        StructField("actor_id", LongType(), True),
+        StructField("actor_login", StringType(), True),
+        StructField("org_id", LongType(), True),
+        StructField("org_login", StringType(), True),
+        StructField("org_url", StringType(), True),
+        StructField("org_avatar_url", StringType(), True),
+        StructField("is_public", BooleanType(), True),
+        StructField("payload_action", StringType(), True),
+        StructField("payload_ref_type", StringType(), True),
+        StructField("pull_request_id", LongType(), True),
+        StructField("pull_request_merged", BooleanType(), True),
+        StructField("issue_id", LongType(), True),
+        StructField("comment_id", LongType(), True),
+        StructField("release_id", LongType(), True),
+        StructField("member_id", LongType(), True),
+        StructField("ingestion_ts", StringType(), True),
+        StructField("source_file", StringType(), True),
+    ]
+)
 
-class FakeExpression:
-    def __init__(self, name: str):
-        self.name = name
 
-    def __eq__(self, other) -> Any:
-        return FakeExpression(f"{self.name}=={other}")
-
-    def __gt__(self, other):
-        return FakeExpression(f"{self.name}>{other}")
-
-    def __truediv__(self, other):
-        right = other.name if isinstance(other, FakeExpression) else str(other)
-        return FakeExpression(f"{self.name}/{right}")
-
-    def alias(self, name: str):
-        return FakeExpression(name)
-
-    def cast(self, data_type: str):
-        return FakeExpression(f"{self.name}:{data_type}")
-
-    def contains(self, other):
-        return FakeExpression(f"{self.name}.contains({other})")
-
-    def like(self, other):
-        return FakeExpression(f"{self.name}.like({other})")
+def _write_input_parquet(spark, tmp_path: Path, rows: list[dict]) -> str:
+    input_path = tmp_path / "input"
+    spark.createDataFrame(rows, schema=INPUT_SCHEMA).write.mode("overwrite").parquet(
+        str(input_path)
+    )
+    return str(input_path)
 
 
 @pytest.mark.unit
@@ -53,121 +63,293 @@ class TestBuildCandidatesServiceUnit:
         assert _to_s3a("s3a://bucket/key") == "s3a://bucket/key"
         assert _to_s3a("/tmp/input.parquet") == "/tmp/input.parquet"
 
-    def test_post_init_reads_parquet_and_builds_event_columns(self, monkeypatch):
-        spark = Mock()
-        df = Mock()
-        spark.read.parquet.return_value = df
-
-        col_mock = Mock(side_effect=lambda name: FakeExpression(name))
-        when_expression = Mock()
-        when_expression.otherwise.return_value = FakeExpression("when_result")
-        when_mock = Mock(return_value=when_expression)
-        sum_expression = Mock()
-        sum_expression.alias.return_value = FakeExpression("aliased_sum")
-        sum_mock = Mock(return_value=sum_expression)
-        lit_mock = Mock(return_value=FakeExpression("lit_expr"))
-
-        functions_mock = Mock()
-        functions_mock.col = col_mock
-        functions_mock.when = when_mock
-        functions_mock.sum = sum_mock
-        functions_mock.lit = lit_mock
-        monkeypatch.setattr("gba.services.build_candidates.F", functions_mock)
+    def test_post_init_reads_input_parquet(self, spark, tmp_path: Path):
+        input_path = _write_input_parquet(
+            spark,
+            tmp_path,
+            [
+                {
+                    "event_id": 1,
+                    "event_type": "PushEvent",
+                    "created_at": "2026-03-20T21:00:00Z",
+                    "repo_id": 101,
+                    "repo_full_name": "acme/widgets",
+                    "actor_id": 10,
+                    "actor_login": "alice",
+                    "org_id": 501,
+                    "org_login": "acme",
+                    "org_url": "https://api.github.com/orgs/acme",
+                    "org_avatar_url": "https://example.test/acme.png",
+                    "is_public": True,
+                    "payload_action": None,
+                    "payload_ref_type": None,
+                    "pull_request_id": None,
+                    "pull_request_merged": None,
+                    "issue_id": None,
+                    "comment_id": None,
+                    "release_id": None,
+                    "member_id": None,
+                    "ingestion_ts": "2026-03-20T21:10:00Z",
+                    "source_file": "s3://landing/events.json.gz",
+                }
+            ],
+        )
 
         service = BuildCandidates(
             spark=spark,
-            input_path="s3a://bronze/input/",
-            output_path="s3a://silver/output/",
+            input_path=input_path,
+            output_path=str(tmp_path / "output"),
             dt="2026-03-20",
             hr="21",
         )
 
-        spark.read.parquet.assert_called_once_with("s3a://bronze/input/")
-        assert service.df is df
+        assert service.df.count() == 1
+        assert set(service.df.columns) >= {"repo_id", "repo_full_name", "event_type"}
 
-    def test_repositories_writes_output(self, monkeypatch):
-        service = object.__new__(BuildCandidates)
-        service.output_path = "s3a://silver/repo_candidates/"
-        filtered_df = Mock()
-        filtered_df.filter.return_value = filtered_df
-        service.df = filtered_df
-        service.dt = "2026-03-20"
-        service.hr = "21"
-        event_columns = [Mock(name="event_column")]
-        ratio_columns = {"push_events_ratio": Mock(name="ratio_column")}
-        service._build_event_columns = Mock(return_value=(event_columns, ratio_columns))
-        aggregated_df = Mock()
-        aggregated_df.write.mode.return_value = aggregated_df.write
-        service._common_metrics = Mock(return_value=aggregated_df)
-        monkeypatch.setattr(
-            "gba.services.build_candidates.F.col",
-            Mock(side_effect=lambda name: FakeExpression(name)),
+    def test_repositories_writes_filtered_aggregates(self, spark, tmp_path: Path):
+        input_path = _write_input_parquet(
+            spark,
+            tmp_path,
+            [
+                {
+                    "event_id": 1,
+                    "event_type": "PushEvent",
+                    "created_at": "2026-03-20T21:00:00Z",
+                    "repo_id": 101,
+                    "repo_full_name": "acme/widgets",
+                    "actor_id": 10,
+                    "actor_login": "alice",
+                    "org_id": 501,
+                    "org_login": "acme",
+                    "org_url": "https://api.github.com/orgs/acme",
+                    "org_avatar_url": "https://example.test/acme.png",
+                    "is_public": True,
+                    "payload_action": None,
+                    "payload_ref_type": None,
+                    "pull_request_id": None,
+                    "pull_request_merged": True,
+                    "issue_id": 9001,
+                    "comment_id": 9101,
+                    "release_id": 9201,
+                    "member_id": None,
+                    "ingestion_ts": "2026-03-20T21:10:00Z",
+                    "source_file": "source-1",
+                },
+                {
+                    "event_id": 2,
+                    "event_type": "IssuesEvent",
+                    "created_at": "2026-03-20T21:05:00Z",
+                    "repo_id": 101,
+                    "repo_full_name": "acme/widgets",
+                    "actor_id": 11,
+                    "actor_login": "helper[bot]",
+                    "org_id": 501,
+                    "org_login": "acme",
+                    "org_url": "https://api.github.com/orgs/acme",
+                    "org_avatar_url": "https://example.test/acme.png",
+                    "is_public": False,
+                    "payload_action": None,
+                    "payload_ref_type": None,
+                    "pull_request_id": None,
+                    "pull_request_merged": False,
+                    "issue_id": 9002,
+                    "comment_id": None,
+                    "release_id": None,
+                    "member_id": None,
+                    "ingestion_ts": "2026-03-20T21:10:00Z",
+                    "source_file": "source-2",
+                },
+                {
+                    "event_id": 3,
+                    "event_type": "PushEvent",
+                    "created_at": "2026-03-20T21:07:00Z",
+                    "repo_id": 202,
+                    "repo_full_name": "invalid-name",
+                    "actor_id": 12,
+                    "actor_login": "bob",
+                    "org_id": 502,
+                    "org_login": "invalid-org",
+                    "org_url": "https://api.github.com/orgs/invalid-org",
+                    "org_avatar_url": "https://example.test/invalid-org.png",
+                    "is_public": True,
+                    "payload_action": None,
+                    "payload_ref_type": None,
+                    "pull_request_id": None,
+                    "pull_request_merged": None,
+                    "issue_id": None,
+                    "comment_id": None,
+                    "release_id": None,
+                    "member_id": None,
+                    "ingestion_ts": "2026-03-20T21:10:00Z",
+                    "source_file": "source-3",
+                },
+                {
+                    "event_id": 4,
+                    "event_type": "PushEvent",
+                    "created_at": "2026-03-20T21:08:00Z",
+                    "repo_id": None,
+                    "repo_full_name": None,
+                    "actor_id": 13,
+                    "actor_login": "charlie",
+                    "org_id": 503,
+                    "org_login": "null-repo-org",
+                    "org_url": "https://api.github.com/orgs/null-repo-org",
+                    "org_avatar_url": "https://example.test/null-repo-org.png",
+                    "is_public": True,
+                    "payload_action": None,
+                    "payload_ref_type": None,
+                    "pull_request_id": None,
+                    "pull_request_merged": None,
+                    "issue_id": None,
+                    "comment_id": None,
+                    "release_id": None,
+                    "member_id": None,
+                    "ingestion_ts": "2026-03-20T21:10:00Z",
+                    "source_file": "source-4",
+                },
+            ],
         )
-        monkeypatch.setattr(
-            "gba.services.build_candidates.F.isnotnull",
-            Mock(side_effect=lambda expr: FakeExpression(f"isnotnull({expr.name})")),
+        output_path = tmp_path / "repo-output"
+
+        service = BuildCandidates(
+            spark=spark,
+            input_path=input_path,
+            output_path=str(output_path),
+            dt="2026-03-20",
+            hr="21",
         )
 
-        BuildCandidates.repositories(service)
+        service.repositories()
 
-        assert filtered_df.filter.call_count == 3
-        service._build_event_columns.assert_called_once_with(filtered_df)
-        service._common_metrics.assert_called_once_with(
-            filtered_df,
-            ["repo_id", "repo_full_name"],
-            event_columns,
-            ratio_columns,
+        rows = spark.read.parquet(str(output_path)).collect()
+        assert len(rows) == 1
+
+        row = rows[0]
+        assert row.repo_id == 101
+        assert row.repo_full_name == "acme/widgets"
+        assert row.total_events == 2
+        assert row.public_events_count == 1
+        assert row.unique_actors == 2
+        assert row.bot_events == 1
+        assert row.issues_count == 2
+        assert row.comments_count == 1
+        assert row.releases_count == 1
+        assert row.merged_pr_count == 1
+        assert row.push_events == 1
+        assert row.issues_events == 1
+        assert row.push_events_ratio == pytest.approx(0.5)
+        assert row.issues_events_ratio == pytest.approx(0.5)
+        assert row.bot_ratio == pytest.approx(0.5)
+        assert row.dt == date(2026, 3, 20)
+        assert row.hr == 21
+
+    def test_organizations_writes_filtered_aggregates(self, spark, tmp_path: Path):
+        input_path = _write_input_parquet(
+            spark,
+            tmp_path,
+            [
+                {
+                    "event_id": 1,
+                    "event_type": "PushEvent",
+                    "created_at": "2026-03-20T21:00:00Z",
+                    "repo_id": 101,
+                    "repo_full_name": "acme/widgets",
+                    "actor_id": 10,
+                    "actor_login": "alice",
+                    "org_id": 501,
+                    "org_login": "acme",
+                    "org_url": "https://api.github.com/orgs/acme",
+                    "org_avatar_url": "https://example.test/acme.png",
+                    "is_public": True,
+                    "payload_action": None,
+                    "payload_ref_type": None,
+                    "pull_request_id": None,
+                    "pull_request_merged": False,
+                    "issue_id": None,
+                    "comment_id": None,
+                    "release_id": None,
+                    "member_id": None,
+                    "ingestion_ts": "2026-03-20T21:10:00Z",
+                    "source_file": "source-1",
+                },
+                {
+                    "event_id": 2,
+                    "event_type": "WatchEvent",
+                    "created_at": "2026-03-20T21:01:00Z",
+                    "repo_id": 102,
+                    "repo_full_name": "acme/gadgets",
+                    "actor_id": 11,
+                    "actor_login": "bob",
+                    "org_id": 501,
+                    "org_login": "acme",
+                    "org_url": "https://api.github.com/orgs/acme",
+                    "org_avatar_url": "https://example.test/acme.png",
+                    "is_public": True,
+                    "payload_action": None,
+                    "payload_ref_type": None,
+                    "pull_request_id": None,
+                    "pull_request_merged": False,
+                    "issue_id": None,
+                    "comment_id": None,
+                    "release_id": None,
+                    "member_id": None,
+                    "ingestion_ts": "2026-03-20T21:10:00Z",
+                    "source_file": "source-2",
+                },
+                {
+                    "event_id": 3,
+                    "event_type": "PushEvent",
+                    "created_at": "2026-03-20T21:02:00Z",
+                    "repo_id": 103,
+                    "repo_full_name": "missing/org",
+                    "actor_id": 12,
+                    "actor_login": "carol",
+                    "org_id": None,
+                    "org_login": None,
+                    "org_url": None,
+                    "org_avatar_url": None,
+                    "is_public": True,
+                    "payload_action": None,
+                    "payload_ref_type": None,
+                    "pull_request_id": None,
+                    "pull_request_merged": False,
+                    "issue_id": None,
+                    "comment_id": None,
+                    "release_id": None,
+                    "member_id": None,
+                    "ingestion_ts": "2026-03-20T21:10:00Z",
+                    "source_file": "source-3",
+                },
+            ],
         )
-        aggregated_df.write.mode.assert_called_once_with("overwrite")
-        aggregated_df.write.parquet.assert_called_once_with(
-            "s3a://silver/repo_candidates/"
+        output_path = tmp_path / "org-output"
+
+        service = BuildCandidates(
+            spark=spark,
+            input_path=input_path,
+            output_path=str(output_path),
+            dt="2026-03-20",
+            hr="21",
         )
 
-    def test_organizations_writes_output(self, monkeypatch):
-        service = object.__new__(BuildCandidates)
-        service.output_path = "s3a://silver/org_candidates/"
-        filtered_df = Mock()
-        filtered_df.filter.return_value = filtered_df
-        service.df = filtered_df
-        service.dt = "2026-03-20"
-        service.hr = "21"
-        event_columns = [Mock(name="event_column")]
-        ratio_columns = {"push_events_ratio": Mock(name="ratio_column")}
-        service._build_event_columns = Mock(return_value=(event_columns, ratio_columns))
+        service.organizations()
 
-        count_distinct_expression = Mock()
-        aliased_expression = Mock(name="repos_count_expr")
-        count_distinct_expression.alias.return_value = aliased_expression
-        monkeypatch.setattr(
-            "gba.services.build_candidates.F.countDistinct",
-            Mock(return_value=count_distinct_expression),
-        )
-        monkeypatch.setattr(
-            "gba.services.build_candidates.F.col",
-            Mock(side_effect=lambda name: FakeExpression(name)),
-        )
-        monkeypatch.setattr(
-            "gba.services.build_candidates.F.isnotnull",
-            Mock(side_effect=lambda expr: FakeExpression(f"isnotnull({expr.name})")),
-        )
-        aggregated_df = Mock()
-        aggregated_df.write.mode.return_value = aggregated_df.write
-        service._common_metrics = Mock(return_value=aggregated_df)
+        rows = spark.read.parquet(str(output_path)).collect()
+        assert len(rows) == 1
 
-        BuildCandidates.organizations(service)
-
-        args, _ = service._common_metrics.call_args
-        assert filtered_df.filter.call_count == 2
-        service._build_event_columns.assert_called_once_with(filtered_df)
-        assert args[0] is filtered_df
-        assert args[1] == ["org_id", "org_login"]
-        assert args[2] is event_columns
-        assert args[3] is ratio_columns
-        assert args[4] is aliased_expression
-        aggregated_df.write.mode.assert_called_once_with("overwrite")
-        aggregated_df.write.parquet.assert_called_once_with(
-            "s3a://silver/org_candidates/"
-        )
+        row = rows[0]
+        assert row.org_id == 501
+        assert row.org_login == "acme"
+        assert row.total_events == 2
+        assert row.public_events_count == 2
+        assert row.asDict()["repos_count"] == 2
+        assert row.unique_actors == 2
+        assert row.push_events == 1
+        assert row.watch_events == 1
+        assert row.push_events_ratio == pytest.approx(0.5)
+        assert row.watch_events_ratio == pytest.approx(0.5)
+        assert row.dt == date(2026, 3, 20)
+        assert row.hr == 21
 
     def test_main_dispatches_repo_candidates(self, monkeypatch):
         args = Namespace(

@@ -32,3 +32,16 @@ def _isolate_aws_env(monkeypatch):
     monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-central-1")
     monkeypatch.setenv("AWS_EC2_METADATA_DISABLED", "true")
     boto3.DEFAULT_SESSION = None
+
+
+@pytest.fixture(scope="session")
+def spark():
+    pyspark_sql = pytest.importorskip("pyspark.sql")
+
+    session = (
+        pyspark_sql.SparkSession.builder.master("local[1]")
+        .appName("github-batch-analytics-tests")
+        .getOrCreate()
+    )
+    yield session
+    session.stop()
