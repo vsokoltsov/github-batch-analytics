@@ -25,3 +25,4 @@ vendored/
 .virtual_documents/
 .pytest_cache/
 .ruff_cache/
+.dlt/secrets.toml
