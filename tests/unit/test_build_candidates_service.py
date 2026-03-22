@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 from argparse import Namespace
-from unittest.mock import Mock, PropertyMock
+from unittest.mock import Mock
 
 import pytest
 
@@ -34,6 +34,12 @@ class FakeExpression:
 
     def cast(self, data_type: str):
         return FakeExpression(f"{self.name}:{data_type}")
+
+    def contains(self, other):
+        return FakeExpression(f"{self.name}.contains({other})")
+
+    def like(self, other):
+        return FakeExpression(f"{self.name}.like({other})")
 
 
 @pytest.mark.unit
@@ -67,11 +73,6 @@ class TestBuildCandidatesServiceUnit:
         functions_mock.sum = sum_mock
         functions_mock.lit = lit_mock
         monkeypatch.setattr("gba.services.build_candidates.F", functions_mock)
-        monkeypatch.setattr(
-            BuildCandidates,
-            "event_types_list",
-            PropertyMock(return_value=["PushEvent", "IssuesEvent"]),
-        )
 
         service = BuildCandidates(
             spark=spark,
@@ -83,22 +84,40 @@ class TestBuildCandidatesServiceUnit:
 
         spark.read.parquet.assert_called_once_with("s3a://bronze/input/")
         assert service.df is df
-        assert len(service.event_columns) == 2
-        assert set(service.ratio_columns) == {
-            "push_events_ratio",
-            "issues_events_ratio",
-        }
 
-    def test_repositories_writes_output(self):
+    def test_repositories_writes_output(self, monkeypatch):
         service = object.__new__(BuildCandidates)
         service.output_path = "s3a://silver/repo_candidates/"
+        filtered_df = Mock()
+        filtered_df.filter.return_value = filtered_df
+        service.df = filtered_df
+        service.dt = "2026-03-20"
+        service.hr = "21"
+        event_columns = [Mock(name="event_column")]
+        ratio_columns = {"push_events_ratio": Mock(name="ratio_column")}
+        service._build_event_columns = Mock(return_value=(event_columns, ratio_columns))
         aggregated_df = Mock()
         aggregated_df.write.mode.return_value = aggregated_df.write
         service._common_metrics = Mock(return_value=aggregated_df)
+        monkeypatch.setattr(
+            "gba.services.build_candidates.F.col",
+            Mock(side_effect=lambda name: FakeExpression(name)),
+        )
+        monkeypatch.setattr(
+            "gba.services.build_candidates.F.isnotnull",
+            Mock(side_effect=lambda expr: FakeExpression(f"isnotnull({expr.name})")),
+        )
 
         BuildCandidates.repositories(service)
 
-        service._common_metrics.assert_called_once_with(["repo_id", "repo_full_name"])
+        assert filtered_df.filter.call_count == 3
+        service._build_event_columns.assert_called_once_with(filtered_df)
+        service._common_metrics.assert_called_once_with(
+            filtered_df,
+            ["repo_id", "repo_full_name"],
+            event_columns,
+            ratio_columns,
+        )
         aggregated_df.write.mode.assert_called_once_with("overwrite")
         aggregated_df.write.parquet.assert_called_once_with(
             "s3a://silver/repo_candidates/"
@@ -107,9 +126,14 @@ class TestBuildCandidatesServiceUnit:
     def test_organizations_writes_output(self, monkeypatch):
         service = object.__new__(BuildCandidates)
         service.output_path = "s3a://silver/org_candidates/"
-        aggregated_df = Mock()
-        aggregated_df.write.mode.return_value = aggregated_df.write
-        service._common_metrics = Mock(return_value=aggregated_df)
+        filtered_df = Mock()
+        filtered_df.filter.return_value = filtered_df
+        service.df = filtered_df
+        service.dt = "2026-03-20"
+        service.hr = "21"
+        event_columns = [Mock(name="event_column")]
+        ratio_columns = {"push_events_ratio": Mock(name="ratio_column")}
+        service._build_event_columns = Mock(return_value=(event_columns, ratio_columns))
 
         count_distinct_expression = Mock()
         aliased_expression = Mock(name="repos_count_expr")
@@ -118,12 +142,28 @@ class TestBuildCandidatesServiceUnit:
             "gba.services.build_candidates.F.countDistinct",
             Mock(return_value=count_distinct_expression),
         )
+        monkeypatch.setattr(
+            "gba.services.build_candidates.F.col",
+            Mock(side_effect=lambda name: FakeExpression(name)),
+        )
+        monkeypatch.setattr(
+            "gba.services.build_candidates.F.isnotnull",
+            Mock(side_effect=lambda expr: FakeExpression(f"isnotnull({expr.name})")),
+        )
+        aggregated_df = Mock()
+        aggregated_df.write.mode.return_value = aggregated_df.write
+        service._common_metrics = Mock(return_value=aggregated_df)
 
         BuildCandidates.organizations(service)
 
         args, _ = service._common_metrics.call_args
-        assert args[0] == ["org_id", "org_login"]
-        assert args[1] is aliased_expression
+        assert filtered_df.filter.call_count == 2
+        service._build_event_columns.assert_called_once_with(filtered_df)
+        assert args[0] is filtered_df
+        assert args[1] == ["org_id", "org_login"]
+        assert args[2] is event_columns
+        assert args[3] is ratio_columns
+        assert args[4] is aliased_expression
         aggregated_df.write.mode.assert_called_once_with("overwrite")
         aggregated_df.write.parquet.assert_called_once_with(
             "s3a://silver/org_candidates/"

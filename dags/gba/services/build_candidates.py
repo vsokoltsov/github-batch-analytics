@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, cast, Any
 
 from pyspark.sql import Column, DataFrame, SparkSession
 from pyspark.sql import functions as F
@@ -39,10 +39,9 @@ class BuildCandidates:
 
     def repositories(self) -> None:
         df = (
-            self.df
-            .filter(F.isnotnull(F.col("repo_id")))
+            self.df.filter(F.isnotnull(F.col("repo_id")))
             .filter(F.isnotnull(F.col("repo_full_name")))
-            .filter(F.col("repo_full_name").contains("/"))
+            .filter(F.col("repo_full_name").like("%/%"))
         )
 
         event_columns, ratio_columns = self._build_event_columns(df)
@@ -55,10 +54,8 @@ class BuildCandidates:
         metrics.write.mode("overwrite").parquet(self.output_path)
 
     def organizations(self) -> None:
-        df = (
-            self.df
-            .filter(F.isnotnull(F.col("org_id")))
-            .filter(F.isnotnull(F.col("org_login")))
+        df = self.df.filter(F.isnotnull(F.col("org_id"))).filter(
+            F.isnotnull(F.col("org_login"))
         )
 
         event_columns, ratio_columns = self._build_event_columns(df)
@@ -88,17 +85,15 @@ class BuildCandidates:
             alias_name = f"{camel_to_snake(raw_name)}s"
 
             event_columns.append(
-                F.sum(
-                    F.when(F.col("event_type") == raw_name, 1).otherwise(0)
-                ).alias(alias_name)
+                F.sum(F.when(F.col("event_type") == raw_name, 1).otherwise(0)).alias(
+                    alias_name
+                )
             )
 
-            ratio_columns[f"{alias_name}_ratio"] = (
-                F.when(
-                    F.col("total_events") > 0,
-                    F.col(alias_name) / F.col("total_events"),
-                ).otherwise(F.lit(0.0))
-            )
+            ratio_columns[f"{alias_name}_ratio"] = F.when(
+                F.col("total_events") > 0,
+                F.col(alias_name) / F.col("total_events"),
+            ).otherwise(F.lit(0.0))
 
         return event_columns, ratio_columns
 
@@ -112,7 +107,9 @@ class BuildCandidates:
     ) -> DataFrame:
         metrics = df.groupBy(*group_by).agg(
             F.count("*").alias("total_events"),
-            F.sum(F.when(F.col("is_public") == True, 1).otherwise(0)).alias("public_events_count"),
+            F.sum(F.when(F.col("is_public"), 1).otherwise(0)).alias(
+                "public_events_count"
+            ),
             F.countDistinct("actor_id").alias("unique_actors"),
             F.max("created_at").alias("last_event_at"),
             F.sum(
@@ -121,7 +118,9 @@ class BuildCandidates:
             F.countDistinct("issue_id").alias("issues_count"),
             F.countDistinct("comment_id").alias("comments_count"),
             F.countDistinct("release_id").alias("releases_count"),
-            F.sum(F.when(F.col("pull_request_merged") == True, 1).otherwise(0)).alias("merged_pr_count"),
+            F.sum(F.when(F.col("pull_request_merged"), 1).otherwise(0)).alias(
+                "merged_pr_count"
+            ),
             *event_columns,
             *extra_columns,
         )
@@ -130,31 +129,32 @@ class BuildCandidates:
             metrics = metrics.withColumn(name, expr)
 
         return (
-            metrics
-            .withColumn(
+            metrics.withColumn(
                 "composite_score",
-                0.5 * F.log1p(F.col("total_events")) +
-                0.3 * F.col("push_events_ratio") +
-                0.2 * F.log1p(F.col("unique_actors"))
+                0.5 * F.log1p(F.col("total_events"))
+                + 0.3 * F.col("push_events_ratio")
+                + 0.2 * F.log1p(F.col("unique_actors")),
             )
             .withColumn(
                 "bot_ratio",
                 F.when(
                     F.col("total_events") > 0,
                     F.col("bot_events") / F.col("total_events"),
-                ).otherwise(F.lit(0.0))
+                ).otherwise(F.lit(0.0)),
             )
             .withColumn("dt", F.lit(self.dt).cast("date"))
             .withColumn("hr", F.lit(self.hr).cast("int"))
             .withColumn(
                 "last_event_at",
-                F.to_timestamp("last_event_at", "yyyy-MM-dd'T'HH:mm:ssX")
+                F.to_timestamp("last_event_at", "yyyy-MM-dd'T'HH:mm:ssX"),
             )
         )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build repository and organization candidates")
+    parser = argparse.ArgumentParser(
+        description="Build repository and organization candidates"
+    )
     parser.add_argument("--input-path", required=True)
     parser.add_argument("--output-path", required=True)
     parser.add_argument("--type", required=True)
@@ -162,7 +162,8 @@ def main() -> None:
     parser.add_argument("--hr", required=True)
     args = parser.parse_args()
 
-    spark: SparkSession = SparkSession.builder.appName(
+    builder = cast(Any, SparkSession.builder)
+    spark: SparkSession = builder.appName(
         f"gharchive-build-candidate-{args.type}"
     ).getOrCreate()
 
