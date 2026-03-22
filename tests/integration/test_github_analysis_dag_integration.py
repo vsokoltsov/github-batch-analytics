@@ -8,8 +8,8 @@ import pytest
 from airflow.models import DagBag
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.sdk.definitions.context import Context
+from gba.settings.build_aggregates import get_build_aggregates_settings
 from gba.settings.parse_flatten import get_parse_flatten_settings
-from gba.settings.build_candidates import get_build_candidates_settings
 from gba.settings.get_archive import get_download_archive_settings
 
 DAG_ID = "github_batch_analysis"
@@ -30,7 +30,7 @@ def dagbag() -> DagBag:
     with patch.dict("os.environ", TEST_ENV, clear=False):
         get_download_archive_settings.cache_clear()
         get_parse_flatten_settings.cache_clear()
-        get_build_candidates_settings.cache_clear()
+        get_build_aggregates_settings.cache_clear()
         return DagBag(dag_folder=str(DAG_FILE), include_examples=False)
 
 
@@ -56,27 +56,27 @@ class TestGithubAnalysisDag:
         expected = {
             "get_github_events_archive",
             "parse_flatten_events",
-            "build_repo_candidates",
-            "build_org_candidates",
+            "build_repo_aggregates",
+            "build_org_aggregates",
         }
         assert set(dag.task_dict) == expected
 
     def test_task_types(self, dag):
         assert isinstance(dag.task_dict["parse_flatten_events"], SparkSubmitOperator)
-        assert isinstance(dag.task_dict["build_repo_candidates"], SparkSubmitOperator)
-        assert isinstance(dag.task_dict["build_org_candidates"], SparkSubmitOperator)
+        assert isinstance(dag.task_dict["build_repo_aggregates"], SparkSubmitOperator)
+        assert isinstance(dag.task_dict["build_org_aggregates"], SparkSubmitOperator)
 
     def test_dependencies(self, dag):
         download = dag.task_dict["get_github_events_archive"]
         parse_flatten = dag.task_dict["parse_flatten_events"]
-        repo = dag.task_dict["build_repo_candidates"]
-        org = dag.task_dict["build_org_candidates"]
+        repo = dag.task_dict["build_repo_aggregates"]
+        org = dag.task_dict["build_org_aggregates"]
 
         assert download.downstream_task_ids == {"parse_flatten_events"}
         assert parse_flatten.upstream_task_ids == {"get_github_events_archive"}
         assert parse_flatten.downstream_task_ids == {
-            "build_repo_candidates",
-            "build_org_candidates",
+            "build_repo_aggregates",
+            "build_org_aggregates",
         }
         assert repo.upstream_task_ids == {"parse_flatten_events"}
         assert org.upstream_task_ids == {"parse_flatten_events"}
@@ -89,16 +89,16 @@ class TestGithubAnalysisDag:
         assert task.conf is not None
         assert task.conf["spark.executorEnv.PYTHONPATH"] == "/opt/airflow/dags"
 
-    def test_build_candidates_task_configuration(self, dag):
-        repo_task = dag.task_dict["build_repo_candidates"]
-        org_task = dag.task_dict["build_org_candidates"]
+    def test_build_aggregates_task_configuration(self, dag):
+        repo_task = dag.task_dict["build_repo_aggregates"]
+        org_task = dag.task_dict["build_org_aggregates"]
 
         assert (
             repo_task.application
-            == "/opt/airflow/dags/gba/services/build_candidates.py"
+            == "/opt/airflow/dags/gba/services/build_aggregates.py"
         )
         assert (
-            org_task.application == "/opt/airflow/dags/gba/services/build_candidates.py"
+            org_task.application == "/opt/airflow/dags/gba/services/build_aggregates.py"
         )
         assert repo_task.application_args is not None
         assert org_task.application_args is not None
@@ -119,7 +119,7 @@ class TestGithubAnalysisDag:
         ]
 
     def test_rendered_candidate_paths(self, dag):
-        task = dag.task_dict["build_repo_candidates"]
+        task = dag.task_dict["build_repo_aggregates"]
         context = Context(
             {
                 "ds": "2026-03-20",

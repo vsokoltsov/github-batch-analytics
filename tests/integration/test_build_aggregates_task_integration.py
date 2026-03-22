@@ -8,12 +8,12 @@ from airflow.sdk.definitions.context import Context
 import pendulum
 import pytest
 
-from gba.settings.build_candidates import get_build_candidates_settings
-from gba.tasks.build_candidates import build_org_candidates, build_repo_candidates
+from gba.settings.build_aggregates import get_build_aggregates_settings
+from gba.tasks.build_aggregates import build_org_aggregates, build_repo_aggregates
 
 
 @pytest.mark.integration
-class TestBuildCandidatesTaskIntegration:
+class TestBuildAggregatesTaskIntegration:
     def test_repo_task_attaches_to_dag_and_renders_templates(self, monkeypatch):
         monkeypatch.setenv("S3_SILVER_ZONE_BUCKET_NAME", "gba-silver-zone-test")
         monkeypatch.setenv("AWS_PROFILE", "gba-admin")
@@ -22,15 +22,15 @@ class TestBuildCandidatesTaskIntegration:
             "AWS_SHARED_CREDENTIALS_FILE", "/home/spark/.aws/credentials"
         )
         monkeypatch.setenv("SPARK_MASTER_URL", "spark://spark-master:7077")
-        get_build_candidates_settings.cache_clear()
+        get_build_aggregates_settings.cache_clear()
 
         with DAG(
-            dag_id="test_build_repo_candidates_task",
+            dag_id="test_build_repo_aggregates_task",
             start_date=datetime(2026, 1, 1),
             schedule=None,
             catchup=False,
         ):
-            event = build_repo_candidates(
+            event = build_repo_aggregates(
                 "s3a://gba-bronze-zone-test/gh_events_flat/dt={{ ds }}/hr={{ logical_date.hour }}/",
                 dt="{{ ds }}",
                 hour="{{ logical_date.hour }}",
@@ -69,15 +69,15 @@ class TestBuildCandidatesTaskIntegration:
             "AWS_SHARED_CREDENTIALS_FILE", "/home/spark/.aws/credentials"
         )
         monkeypatch.setenv("SPARK_MASTER_URL", "spark://spark-master:7077")
-        get_build_candidates_settings.cache_clear()
+        get_build_aggregates_settings.cache_clear()
 
         with DAG(
-            dag_id="test_build_org_candidates_task",
+            dag_id="test_build_org_aggregates_task",
             start_date=datetime(2026, 1, 1),
             schedule=None,
             catchup=False,
         ):
-            event = build_org_candidates(
+            event = build_org_aggregates(
                 "s3a://gba-bronze-zone-test/gh_events_flat/dt={{ ds }}/hr={{ logical_date.hour }}/",
                 dt="{{ ds }}",
                 hour="{{ logical_date.hour }}",

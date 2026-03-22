@@ -8,7 +8,7 @@ class CandidatesType(Enum):
     ORG = "org"
 
 
-class BuildCandidateSettings(BaseSettings):
+class BuildAggregateSettings(BaseSettings):
     S3_SILVER_ZONE_BUCKET_NAME: str
     AWS_PROFILE: str
     AWS_CONFIG_FILE: str
@@ -17,5 +17,5 @@ class BuildCandidateSettings(BaseSettings):
 
 
 @lru_cache(maxsize=1)
-def get_build_candidates_settings() -> BuildCandidateSettings:
-    return BuildCandidateSettings()  # type: ignore[call-arg]
+def get_build_aggregates_settings() -> BuildAggregateSettings:
+    return BuildAggregateSettings()  # type: ignore[call-arg]

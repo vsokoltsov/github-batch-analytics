@@ -8,7 +8,7 @@ from typing import Dict, List, cast, Any
 from pyspark.sql import Column, DataFrame, SparkSession
 from pyspark.sql import functions as F
 
-from gba.settings.build_candidates import CandidatesType
+from gba.settings.build_aggregates import CandidatesType
 
 import logging
 
@@ -26,7 +26,7 @@ def _to_s3a(path: str) -> str:
 
 
 @dataclass
-class BuildCandidates:
+class BuildAggregates:
     spark: SparkSession
     input_path: str
     output_path: str
@@ -164,10 +164,10 @@ def main() -> None:
 
     builder = cast(Any, SparkSession.builder)
     spark: SparkSession = builder.appName(
-        f"gharchive-build-candidate-{args.type}"
+        f"gharchive-build-aggregate-{args.type}"
     ).getOrCreate()
 
-    service = BuildCandidates(
+    service = BuildAggregates(
         spark=spark,
         input_path=_to_s3a(args.input_path),
         output_path=_to_s3a(args.output_path),

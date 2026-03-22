@@ -8,8 +8,8 @@ from unittest.mock import Mock
 import pytest
 from pyspark.sql.types import BooleanType, LongType, StringType, StructField, StructType
 
-from gba.services.build_candidates import (
-    BuildCandidates,
+from gba.services.build_aggregates import (
+    BuildAggregates,
     CandidatesType,
     _to_s3a,
     camel_to_snake,
@@ -53,7 +53,7 @@ def _write_input_parquet(spark, tmp_path: Path, rows: list[dict]) -> str:
 
 
 @pytest.mark.unit
-class TestBuildCandidatesServiceUnit:
+class TestBuildAggregatesServiceUnit:
     def test_camel_to_snake_converts_event_name(self):
         assert camel_to_snake("PullRequestReviewEvent") == "pull_request_review_event"
         assert camel_to_snake("PushEvent") == "push_event"
@@ -95,7 +95,7 @@ class TestBuildCandidatesServiceUnit:
             ],
         )
 
-        service = BuildCandidates(
+        service = BuildAggregates(
             spark=spark,
             input_path=input_path,
             output_path=str(tmp_path / "output"),
@@ -211,7 +211,7 @@ class TestBuildCandidatesServiceUnit:
         )
         output_path = tmp_path / "repo-output"
 
-        service = BuildCandidates(
+        service = BuildAggregates(
             spark=spark,
             input_path=input_path,
             output_path=str(output_path),
@@ -324,7 +324,7 @@ class TestBuildCandidatesServiceUnit:
         )
         output_path = tmp_path / "org-output"
 
-        service = BuildCandidates(
+        service = BuildAggregates(
             spark=spark,
             input_path=input_path,
             output_path=str(output_path),
@@ -351,7 +351,7 @@ class TestBuildCandidatesServiceUnit:
         assert row.dt == date(2026, 3, 20)
         assert row.hr == 21
 
-    def test_main_dispatches_repo_candidates(self, monkeypatch):
+    def test_main_dispatches_repo_aggregates(self, monkeypatch):
         args = Namespace(
             input_path="s3://bronze/input/",
             output_path="s3://silver/output/",
@@ -362,7 +362,7 @@ class TestBuildCandidatesServiceUnit:
         parser_mock = Mock()
         parser_mock.parse_args.return_value = args
         monkeypatch.setattr(
-            "gba.services.build_candidates.argparse.ArgumentParser",
+            "gba.services.build_aggregates.argparse.ArgumentParser",
             Mock(return_value=parser_mock),
         )
 
@@ -370,14 +370,14 @@ class TestBuildCandidatesServiceUnit:
         builder = Mock()
         builder.appName.return_value.getOrCreate.return_value = spark
         monkeypatch.setattr(
-            "gba.services.build_candidates.SparkSession",
+            "gba.services.build_aggregates.SparkSession",
             Mock(builder=builder),
         )
 
-        service = Mock(spec=BuildCandidates)
+        service = Mock(spec=BuildAggregates)
         service_ctor = Mock(return_value=service)
         monkeypatch.setattr(
-            "gba.services.build_candidates.BuildCandidates", service_ctor
+            "gba.services.build_aggregates.BuildAggregates", service_ctor
         )
 
         main()
@@ -393,7 +393,7 @@ class TestBuildCandidatesServiceUnit:
         service.organizations.assert_not_called()
         spark.stop.assert_called_once_with()
 
-    def test_main_dispatches_org_candidates(self, monkeypatch):
+    def test_main_dispatches_org_aggregates(self, monkeypatch):
         args = Namespace(
             input_path="s3://bronze/input/",
             output_path="s3://silver/output/",
@@ -404,7 +404,7 @@ class TestBuildCandidatesServiceUnit:
         parser_mock = Mock()
         parser_mock.parse_args.return_value = args
         monkeypatch.setattr(
-            "gba.services.build_candidates.argparse.ArgumentParser",
+            "gba.services.build_aggregates.argparse.ArgumentParser",
             Mock(return_value=parser_mock),
         )
 
@@ -412,13 +412,14 @@ class TestBuildCandidatesServiceUnit:
         builder = Mock()
         builder.appName.return_value.getOrCreate.return_value = spark
         monkeypatch.setattr(
-            "gba.services.build_candidates.SparkSession",
+            "gba.services.build_aggregates.SparkSession",
             Mock(builder=builder),
         )
 
-        service = Mock(spec=BuildCandidates)
+        service = Mock(spec=BuildAggregates)
         monkeypatch.setattr(
-            "gba.services.build_candidates.BuildCandidates", Mock(return_value=service)
+            "gba.services.build_aggregates.BuildAggregates",
+            Mock(return_value=service),
         )
 
         main()

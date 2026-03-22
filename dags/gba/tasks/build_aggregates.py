@@ -1,23 +1,26 @@
 from airflow.models.xcom_arg import XComArg
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from typing import NamedTuple
-from gba.settings.build_candidates import get_build_candidates_settings, CandidatesType
+from gba.settings.build_aggregates import (
+    CandidatesType,
+    get_build_aggregates_settings,
+)
 
 
-class BuildCandidateEvent(NamedTuple):
+class BuildAggregateEvent(NamedTuple):
     task: SparkSubmitOperator
     output_path: str
 
 
-def build_repo_candidates(
+def build_repo_aggregates(
     input_path: str | XComArg, dt: str, hour: str
-) -> BuildCandidateEvent:
-    settings = get_build_candidates_settings()
+) -> BuildAggregateEvent:
+    settings = get_build_aggregates_settings()
     output_path = f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/repo_candidates/dt={dt}/hr={hour}/"
     task = SparkSubmitOperator(
-        task_id="build_repo_candidates",
+        task_id="build_repo_aggregates",
         conn_id="spark_default",
-        application="/opt/airflow/dags/gba/services/build_candidates.py",
+        application="/opt/airflow/dags/gba/services/build_aggregates.py",
         application_args=[
             "--input-path",
             input_path,
@@ -52,20 +55,20 @@ def build_repo_candidates(
             "spark.executorEnv.PYTHONPATH": "/opt/airflow/dags",
         },
     )
-    return BuildCandidateEvent(task=task, output_path=output_path)
+    return BuildAggregateEvent(task=task, output_path=output_path)
 
 
-def build_org_candidates(
+def build_org_aggregates(
     input_path: str | XComArg, dt: str, hour: str
-) -> BuildCandidateEvent:
-    settings = get_build_candidates_settings()
+) -> BuildAggregateEvent:
+    settings = get_build_aggregates_settings()
     output_path = (
         f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/org_candidates/dt={dt}/hr={hour}/"
     )
     task = SparkSubmitOperator(
-        task_id="build_org_candidates",
+        task_id="build_org_aggregates",
         conn_id="spark_default",
-        application="/opt/airflow/dags/gba/services/build_candidates.py",
+        application="/opt/airflow/dags/gba/services/build_aggregates.py",
         application_args=[
             "--input-path",
             input_path,
@@ -100,4 +103,4 @@ def build_org_candidates(
             "spark.executorEnv.PYTHONPATH": "/opt/airflow/dags",
         },
     )
-    return BuildCandidateEvent(task=task, output_path=output_path)
+    return BuildAggregateEvent(task=task, output_path=output_path)

@@ -111,7 +111,9 @@ class TestParseFlattenServiceUnit:
         assert row.ingestion_ts is not None
         assert row.source_file is not None
 
-    def test_flat_sets_missing_optional_payload_fields_to_null(self, spark, tmp_path: Path):
+    def test_flat_sets_missing_optional_payload_fields_to_null(
+        self, spark, tmp_path: Path
+    ):
         input_path = tmp_path / "events.json"
         output_path = tmp_path / "out"
         _write_json_lines(
