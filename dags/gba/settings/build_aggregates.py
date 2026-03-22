@@ -1,11 +1,5 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings
-from enum import Enum
-
-
-class CandidatesType(Enum):
-    REPO = "repo"
-    ORG = "org"
 
 
 class BuildAggregateSettings(BaseSettings):

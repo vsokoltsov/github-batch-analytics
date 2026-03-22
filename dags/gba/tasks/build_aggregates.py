@@ -1,10 +1,8 @@
 from airflow.models.xcom_arg import XComArg
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from typing import NamedTuple
-from gba.settings.build_aggregates import (
-    CandidatesType,
-    get_build_aggregates_settings,
-)
+from gba.settings.enums import CandidatesType
+from gba.settings.build_aggregates import get_build_aggregates_settings
 
 
 class BuildAggregateEvent(NamedTuple):

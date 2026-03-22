@@ -13,6 +13,55 @@ def _write_json_lines(path: Path, rows: list[dict]) -> None:
     path.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
 
 
+@pytest.fixture
+def parse_flatten_full_event_rows() -> list[dict]:
+    return [
+        {
+            "id": "1",
+            "type": "PullRequestEvent",
+            "created_at": "2026-03-08T00:00:00Z",
+            "repo": {"id": 1, "name": "org/repo"},
+            "actor": {"id": 2, "login": "user"},
+            "org": {
+                "id": 3,
+                "login": "org",
+                "url": "https://api.github.com/orgs/org",
+                "avatar_url": "https://avatars.githubusercontent.com/u/3",
+            },
+            "public": True,
+            "payload": {
+                "action": "opened",
+                "ref_type": "branch",
+                "pull_request": {"id": 123, "merged": True},
+                "issue": {"id": 456},
+                "comment": {"id": 789},
+                "release": {"id": 987},
+                "member": {"id": 654},
+            },
+        }
+    ]
+
+
+@pytest.fixture
+def parse_flatten_event_rows_without_payload() -> list[dict]:
+    return [
+        {
+            "id": "1",
+            "type": "PushEvent",
+            "created_at": "2026-03-08T00:00:00Z",
+            "repo": {"id": 1, "name": "org/repo"},
+            "actor": {"id": 2, "login": "user"},
+            "org": {
+                "id": 3,
+                "login": "org",
+                "url": "https://api.github.com/orgs/org",
+                "avatar_url": "https://avatars.githubusercontent.com/u/3",
+            },
+            "public": True,
+        }
+    ]
+
+
 @pytest.mark.unit
 class TestParseFlattenServiceUnit:
     def test_to_s3a_converts_s3_scheme(self):
@@ -47,37 +96,15 @@ class TestParseFlattenServiceUnit:
         assert _has_nested_field(schema, "payload.pull_request.id") is True
         assert _has_nested_field(schema, "payload.pull_request.merged") is False
 
-    def test_flat_writes_expected_flattened_columns(self, spark, tmp_path: Path):
+    def test_flat_writes_expected_flattened_columns(
+        self,
+        spark,
+        tmp_path: Path,
+        parse_flatten_full_event_rows: list[dict],
+    ):
         input_path = tmp_path / "events.json"
         output_path = tmp_path / "out"
-        _write_json_lines(
-            input_path,
-            [
-                {
-                    "id": "1",
-                    "type": "PullRequestEvent",
-                    "created_at": "2026-03-08T00:00:00Z",
-                    "repo": {"id": 1, "name": "org/repo"},
-                    "actor": {"id": 2, "login": "user"},
-                    "org": {
-                        "id": 3,
-                        "login": "org",
-                        "url": "https://api.github.com/orgs/org",
-                        "avatar_url": "https://avatars.githubusercontent.com/u/3",
-                    },
-                    "public": True,
-                    "payload": {
-                        "action": "opened",
-                        "ref_type": "branch",
-                        "pull_request": {"id": 123, "merged": True},
-                        "issue": {"id": 456},
-                        "comment": {"id": 789},
-                        "release": {"id": 987},
-                        "member": {"id": 654},
-                    },
-                }
-            ],
-        )
+        _write_json_lines(input_path, parse_flatten_full_event_rows)
 
         service = ParseService(
             spark=spark,
@@ -112,29 +139,14 @@ class TestParseFlattenServiceUnit:
         assert row.source_file is not None
 
     def test_flat_sets_missing_optional_payload_fields_to_null(
-        self, spark, tmp_path: Path
+        self,
+        spark,
+        tmp_path: Path,
+        parse_flatten_event_rows_without_payload: list[dict],
     ):
         input_path = tmp_path / "events.json"
         output_path = tmp_path / "out"
-        _write_json_lines(
-            input_path,
-            [
-                {
-                    "id": "1",
-                    "type": "PushEvent",
-                    "created_at": "2026-03-08T00:00:00Z",
-                    "repo": {"id": 1, "name": "org/repo"},
-                    "actor": {"id": 2, "login": "user"},
-                    "org": {
-                        "id": 3,
-                        "login": "org",
-                        "url": "https://api.github.com/orgs/org",
-                        "avatar_url": "https://avatars.githubusercontent.com/u/3",
-                    },
-                    "public": True,
-                }
-            ],
-        )
+        _write_json_lines(input_path, parse_flatten_event_rows_without_payload)
 
         service = ParseService(
             spark=spark,

@@ -8,7 +8,7 @@ from typing import Dict, List, cast, Any
 from pyspark.sql import Column, DataFrame, SparkSession
 from pyspark.sql import functions as F
 
-from gba.settings.build_aggregates import CandidatesType
+from gba.settings.enums import CandidatesType
 
 import logging
 
