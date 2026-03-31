@@ -58,6 +58,8 @@ class TestGithubAnalysisDag:
             "parse_flatten_events",
             "build_repo_aggregates",
             "build_org_aggregates",
+            "build_repo_candidates",
+            "build_org_candidates",
         }
         assert set(dag.task_dict) == expected
 
@@ -136,7 +138,7 @@ class TestGithubAnalysisDag:
         )
         assert (
             task.application_args[3]
-            == "s3a://test-silver/repo_candidates/dt=2026-03-20/hr=21/"
+            == "s3a://test-silver/repo_aggregates/dt=2026-03-20/hr=21/"
         )
         assert task.application_args[5] == "repo"
 

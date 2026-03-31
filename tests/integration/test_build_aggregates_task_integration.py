@@ -57,7 +57,7 @@ class TestBuildAggregatesTaskIntegration:
         )
         assert (
             app_args[3]
-            == "s3a://gba-silver-zone-test/repo_candidates/dt=2026-03-08/hr=20/"
+            == "s3a://gba-silver-zone-test/repo_aggregates/dt=2026-03-08/hr=20/"
         )
         assert app_args[5] == "repo"
 
@@ -104,6 +104,6 @@ class TestBuildAggregatesTaskIntegration:
         )
         assert (
             app_args[3]
-            == "s3a://gba-silver-zone-test/org_candidates/dt=2026-03-08/hr=20/"
+            == "s3a://gba-silver-zone-test/org_aggregates/dt=2026-03-08/hr=20/"
         )
         assert app_args[5] == "org"

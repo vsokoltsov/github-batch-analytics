@@ -10,7 +10,6 @@ from pyspark.sql.types import BooleanType, LongType, StringType, StructField, St
 
 from gba.services.build_aggregates import (
     BuildAggregates,
-    _to_s3a,
     camel_to_snake,
     main,
 )
@@ -238,11 +237,6 @@ class TestBuildAggregatesServiceUnit:
         assert camel_to_snake("PullRequestReviewEvent") == "pull_request_review_event"
         assert camel_to_snake("PushEvent") == "push_event"
 
-    def test_to_s3a_converts_s3_scheme(self):
-        assert _to_s3a("s3://bucket/key") == "s3a://bucket/key"
-        assert _to_s3a("s3a://bucket/key") == "s3a://bucket/key"
-        assert _to_s3a("/tmp/input.parquet") == "/tmp/input.parquet"
-
     def test_post_init_reads_input_parquet(
         self,
         spark,
@@ -357,11 +351,9 @@ class TestBuildAggregatesServiceUnit:
         )
 
         spark = Mock()
-        builder = Mock()
-        builder.appName.return_value.getOrCreate.return_value = spark
         monkeypatch.setattr(
-            "gba.services.build_aggregates.SparkSession",
-            Mock(builder=builder),
+            "gba.services.build_aggregates.spark_session",
+            Mock(return_value=spark),
         )
 
         service = Mock(spec=BuildAggregates)
@@ -399,11 +391,9 @@ class TestBuildAggregatesServiceUnit:
         )
 
         spark = Mock()
-        builder = Mock()
-        builder.appName.return_value.getOrCreate.return_value = spark
         monkeypatch.setattr(
-            "gba.services.build_aggregates.SparkSession",
-            Mock(builder=builder),
+            "gba.services.build_aggregates.spark_session",
+            Mock(return_value=spark),
         )
 
         service = Mock(spec=BuildAggregates)
