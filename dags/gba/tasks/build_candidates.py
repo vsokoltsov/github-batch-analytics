@@ -4,7 +4,7 @@ from airflow.models.xcom_arg import XComArg
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
 from gba.settings.enums import CandidatesType
-from gba.settings.build_aggregates import get_build_aggregates_settings
+from gba.settings.build_candidates import get_build_candidates_settings
 
 
 class BuildCandidateEvent(NamedTuple):
@@ -15,7 +15,7 @@ class BuildCandidateEvent(NamedTuple):
 def build_repo_candidates(
     input_path: str | XComArg, dt: str, hour: str
 ) -> BuildCandidateEvent:
-    settings = get_build_aggregates_settings()
+    settings = get_build_candidates_settings()
     output_path = f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/repo_candidates/dt={dt}/hr={hour}/"
 
     task = SparkSubmitOperator(
@@ -30,7 +30,7 @@ def build_repo_candidates(
             "--type",
             CandidatesType.REPO.value,
             "--top-n",
-            "25",
+            settings.CANDIDATES_SIZE,
         ],
         packages=(
             "org.apache.hadoop:hadoop-aws:3.3.4,"
@@ -58,7 +58,7 @@ def build_repo_candidates(
 def build_org_candidates(
     input_path: str | XComArg, dt: str, hour: str
 ) -> BuildCandidateEvent:
-    settings = get_build_aggregates_settings()
+    settings = get_build_candidates_settings()
     output_path = (
         f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/org_candidates/dt={dt}/hr={hour}/"
     )
