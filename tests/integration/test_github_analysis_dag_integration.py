@@ -9,6 +9,7 @@ from airflow.models import DagBag
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.sdk.definitions.context import Context
 from gba.settings.build_aggregates import get_build_aggregates_settings
+from gba.settings.build_candidates import get_build_candidates_settings
 from gba.settings.parse_flatten import get_parse_flatten_settings
 from gba.settings.get_archive import get_download_archive_settings
 
@@ -22,6 +23,7 @@ TEST_ENV = {
     "AWS_PROFILE": "gba-admin",
     "AWS_CONFIG_FILE": "/tmp/aws/config",
     "AWS_SHARED_CREDENTIALS_FILE": "/tmp/aws/credentials",
+    "CANDIDATES_SIZE": "25",
 }
 
 
@@ -31,6 +33,7 @@ def dagbag() -> DagBag:
         get_download_archive_settings.cache_clear()
         get_parse_flatten_settings.cache_clear()
         get_build_aggregates_settings.cache_clear()
+        get_build_candidates_settings.cache_clear()
         return DagBag(dag_folder=str(DAG_FILE), include_examples=False)
 
 
@@ -147,5 +150,9 @@ class TestGithubAnalysisDag:
 
     def test_no_import_errors(self):
         with patch.dict("os.environ", TEST_ENV, clear=False):
+            get_download_archive_settings.cache_clear()
+            get_parse_flatten_settings.cache_clear()
+            get_build_aggregates_settings.cache_clear()
+            get_build_candidates_settings.cache_clear()
             dagbag = DagBag(dag_folder="dags", include_examples=False)
         assert dagbag.import_errors == {}

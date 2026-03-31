@@ -8,7 +8,7 @@ import pytest
 from airflow import DAG
 from airflow.sdk.definitions.context import Context
 
-from gba.settings.build_aggregates import get_build_aggregates_settings
+from gba.settings.build_candidates import get_build_candidates_settings
 from gba.tasks.build_candidates import build_org_candidates, build_repo_candidates
 
 
@@ -22,7 +22,8 @@ class TestBuildCandidatesTaskIntegration:
             "AWS_SHARED_CREDENTIALS_FILE", "/home/spark/.aws/credentials"
         )
         monkeypatch.setenv("SPARK_MASTER_URL", "spark://spark-master:7077")
-        get_build_aggregates_settings.cache_clear()
+        monkeypatch.setenv("CANDIDATES_SIZE", "25")
+        get_build_candidates_settings.cache_clear()
 
         with DAG(
             dag_id="test_build_repo_candidates_task",
@@ -58,7 +59,7 @@ class TestBuildCandidatesTaskIntegration:
             == "s3a://gba-silver-zone-test/repo_candidates/dt=2026-03-08/hr=20/"
         )
         assert app_args[5] == "repo"
-        assert app_args[7] == "25"
+        assert app_args[7] == 25
 
     def test_org_task_attaches_to_dag_and_renders_templates(self, monkeypatch):
         monkeypatch.setenv("S3_SILVER_ZONE_BUCKET_NAME", "gba-silver-zone-test")
@@ -68,7 +69,8 @@ class TestBuildCandidatesTaskIntegration:
             "AWS_SHARED_CREDENTIALS_FILE", "/home/spark/.aws/credentials"
         )
         monkeypatch.setenv("SPARK_MASTER_URL", "spark://spark-master:7077")
-        get_build_aggregates_settings.cache_clear()
+        monkeypatch.setenv("CANDIDATES_SIZE", "25")
+        get_build_candidates_settings.cache_clear()
 
         with DAG(
             dag_id="test_build_org_candidates_task",
@@ -104,4 +106,4 @@ class TestBuildCandidatesTaskIntegration:
             == "s3a://gba-silver-zone-test/org_candidates/dt=2026-03-08/hr=20/"
         )
         assert app_args[5] == "org"
-        assert app_args[7] == "25"
+        assert app_args[7] == 25
