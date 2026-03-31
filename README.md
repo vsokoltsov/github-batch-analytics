@@ -105,7 +105,7 @@
 │  - base validation, types, ingestion_ts, source_file           │
 └───────────────────────────────────────────────────────────────┘
                            │
-                           │ (3) Spark task `build_repo_candidates`
+                           │ (3) Spark task `build_repo_aggregates`
                            │     Input: bronze events
                            │     Output: distinct active repositories
                            ▼
