@@ -7,6 +7,7 @@ from airflow import DAG
 from gba.tasks.get_archive import get_github_events_archive
 from gba.tasks.build_aggregates import build_org_aggregates, build_repo_aggregates
 from gba.tasks.parse_flatten_events import get_parse_flatten_events_task
+from gba.tasks.build_candidates import build_repo_candidates, build_org_candidates
 
 with DAG(
     dag_id="github_batch_analysis",
@@ -25,18 +26,35 @@ with DAG(
     )
     parse_flatten_task = parse_flatten_step.task
 
-    repo_candidates = build_repo_aggregates(
+    repo_aggregates = build_repo_aggregates(
         input_path=parse_flatten_step.output_path,
         dt="{{ ds }}",
         hour="{{ logical_date.hour }}",
     )
-    org_candidates = build_org_aggregates(
+    org_aggregates = build_org_aggregates(
         input_path=parse_flatten_step.output_path,
         dt="{{ ds }}",
         hour="{{ logical_date.hour }}",
     )
-    repo_task = repo_candidates.task
-    org_task = org_candidates.task
+    repo_aggregate_task = repo_aggregates.task
+    org_aggregate_task = org_aggregates.task
+
+    repo_candidates = build_repo_candidates(
+        input_path=repo_aggregates.output_path,
+        dt="{{ ds }}",
+        hour="{{ logical_date.hour }}",
+    )
+    org_candidates = build_org_candidates(
+        input_path=org_aggregates.output_path,
+        dt="{{ ds }}",
+        hour="{{ logical_date.hour }}",
+    )
+    repo_candidate_task = repo_candidates.task
+    org_candidates_task = org_candidates.task
 
     download_step >> parse_flatten_task
-    parse_flatten_task >> [repo_task, org_task]
+
+    parse_flatten_task >> [repo_aggregate_task, org_aggregate_task]
+
+    repo_aggregate_task >> repo_candidate_task
+    org_aggregate_task >> org_candidates_task

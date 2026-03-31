@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, cast, Any
+from typing import Dict, List
 
 from pyspark.sql import Column, DataFrame, SparkSession
 from pyspark.sql import functions as F
@@ -34,8 +34,7 @@ class BuildAggregates:
 
     def repositories(self) -> None:
         df = (
-            self.df
-            .filter(F.isnotnull(F.col("repo_id")))
+            self.df.filter(F.isnotnull(F.col("repo_id")))
             .filter(F.isnotnull(F.col("repo_full_name")))
             .filter(F.col("repo_full_name").like("%/%"))
         )
@@ -158,9 +157,7 @@ def main() -> None:
     parser.add_argument("--hr", required=True)
     args = parser.parse_args()
 
-    spark: SparkSession = spark_session(
-        f"gharchive-build-aggregate-{args.type}"
-    )
+    spark: SparkSession = spark_session(f"gharchive-build-aggregate-{args.type}")
 
     service = BuildAggregates(
         spark=spark,
