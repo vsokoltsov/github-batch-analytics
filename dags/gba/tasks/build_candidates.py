@@ -75,7 +75,7 @@ def build_org_candidates(
             "--type",
             CandidatesType.ORG.value,
             "--top-n",
-            "25",
+            settings.CANDIDATES_SIZE,
         ],
         packages=(
             "org.apache.hadoop:hadoop-aws:3.3.4,"
