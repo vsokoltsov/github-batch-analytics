@@ -14,7 +14,7 @@ def build_repo_aggregates(
     input_path: str | XComArg, dt: str, hour: str
 ) -> BuildAggregateEvent:
     settings = get_build_aggregates_settings()
-    output_path = f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/repo_candidates/dt={dt}/hr={hour}/"
+    output_path = f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/repo_aggregates/dt={dt}/hr={hour}/"
     task = SparkSubmitOperator(
         task_id="build_repo_aggregates",
         conn_id="spark_default",
@@ -61,7 +61,7 @@ def build_org_aggregates(
 ) -> BuildAggregateEvent:
     settings = get_build_aggregates_settings()
     output_path = (
-        f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/org_candidates/dt={dt}/hr={hour}/"
+        f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/org_aggregates/dt={dt}/hr={hour}/"
     )
     task = SparkSubmitOperator(
         task_id="build_org_aggregates",

@@ -9,6 +9,7 @@ from pyspark.sql import Column, DataFrame, SparkSession
 from pyspark.sql import functions as F
 
 from gba.settings.enums import CandidatesType
+from gba.services.utils import spark_session, to_s3a
 
 import logging
 
@@ -17,12 +18,6 @@ logger = logging.getLogger(__name__)
 
 def camel_to_snake(value: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", value).lower()
-
-
-def _to_s3a(path: str) -> str:
-    if path.startswith("s3://"):
-        return "s3a://" + path[len("s3://") :]
-    return path
 
 
 @dataclass
@@ -39,7 +34,8 @@ class BuildAggregates:
 
     def repositories(self) -> None:
         df = (
-            self.df.filter(F.isnotnull(F.col("repo_id")))
+            self.df
+            .filter(F.isnotnull(F.col("repo_id")))
             .filter(F.isnotnull(F.col("repo_full_name")))
             .filter(F.col("repo_full_name").like("%/%"))
         )
@@ -162,15 +158,14 @@ def main() -> None:
     parser.add_argument("--hr", required=True)
     args = parser.parse_args()
 
-    builder = cast(Any, SparkSession.builder)
-    spark: SparkSession = builder.appName(
+    spark: SparkSession = spark_session(
         f"gharchive-build-aggregate-{args.type}"
-    ).getOrCreate()
+    )
 
     service = BuildAggregates(
         spark=spark,
-        input_path=_to_s3a(args.input_path),
-        output_path=_to_s3a(args.output_path),
+        input_path=to_s3a(args.input_path),
+        output_path=to_s3a(args.output_path),
         dt=args.dt,
         hr=args.hr,
     )
