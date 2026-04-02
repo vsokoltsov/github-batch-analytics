@@ -10,6 +10,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    user: "0:0"
     env_file:
       - .env
     environment:
@@ -27,7 +28,16 @@ services:
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
-    command: ["airflow", "db", "migrate"]
+      - ./.dlt:/home/airflow/.dlt:ro
+      - dlt-pipelines-volume:/tmp/dlt
+    command:
+      - bash
+      - -lc
+      - |
+        mkdir -p /tmp/dlt/pipelines
+        chown -R 50000:0 /tmp/dlt
+        chmod -R 775 /tmp/dlt
+        su airflow -s /bin/bash -c "/home/airflow/.local/bin/airflow db migrate"
     restart: "no"
 
   airflow-api-server:
@@ -49,11 +59,17 @@ services:
       AWS_CONFIG_FILE: /home/airflow/.aws/config
       AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
       SPARK_MASTER_URL: spark://spark-master:7077
+      DLT_DATA_DIR: /tmp/dlt
+      DLT_TELEMETRY: false
+      RUNTIME__DLTHUB_TELEMETRY: "false"
+      ENABLE_RUNTIME_TRACE: "false"
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
+      - ./.dlt:/home/airflow/.dlt:ro
+      - dlt-pipelines-volume:/tmp/dlt
     ports:
       - "8080:8080"
     command: api-server
@@ -80,12 +96,18 @@ services:
       AWS_CONFIG_FILE: /home/airflow/.aws/config
       AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
       SPARK_MASTER_URL: spark://spark-master:7077
+      DLT_DATA_DIR: /tmp/dlt
+      DLT_TELEMETRY: false
+      RUNTIME__DLTHUB_TELEMETRY: "false"
+      ENABLE_RUNTIME_TRACE: "false"
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
       - spark-ivy-cache:/home/airflow/.ivy2
+      - ./.dlt:/home/airflow/.dlt:ro
+      - dlt-pipelines-volume:/tmp/dlt
     command: scheduler
     restart: unless-stopped
   
@@ -108,11 +130,17 @@ services:
       AWS_CONFIG_FILE: /home/airflow/.aws/config
       AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
       SPARK_MASTER_URL: spark://spark-master:7077
+      DLT_DATA_DIR: /tmp/dlt
+      DLT_TELEMETRY: false
+      RUNTIME__DLTHUB_TELEMETRY: "false"
+      ENABLE_RUNTIME_TRACE: "false"
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./.local/aws:/home/airflow/.aws:ro
+      - ./.dlt:/home/airflow/.dlt:ro
+      - dlt-pipelines-volume:/tmp/dlt
     command: dag-processor
     restart: unless-stopped
 
@@ -201,7 +229,9 @@ services:
     volumes:
       - ./:/workspace
       - ./.local/aws:/home/spark/.aws:ro
+      - ./.dlt:/home/airflow/.dlt:ro
 
 volumes:
   postgres-db-volume:
   spark-ivy-cache:
+  dlt-pipelines-volume:
