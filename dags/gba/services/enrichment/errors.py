@@ -1,0 +1,2 @@
+class GitHubRateLimitExceeded(Exception):
+    pass
