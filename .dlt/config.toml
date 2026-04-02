@@ -1,0 +1,14 @@
+[destination.filesystem]
+bucket_url = "s3://gba-bronze-zone-prod"
+layout = "{table_name}/dt={dt}/hr={hr}/{load_id}.{file_id}.{ext}"
+
+[destination.filesystem.extra_placeholders]
+dt = "1970-01-01"
+hr = "0"
+
+[pipeline]
+loader_file_format = "parquet"
+
+[runtime]
+dlthub_telemetry = false
+enable_runtime_trace = false
