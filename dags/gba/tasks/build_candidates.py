@@ -20,6 +20,7 @@ def build_repo_candidates(
 
     task = SparkSubmitOperator(
         task_id="build_repo_candidates",
+        task_display_name="Build repository candidates",
         conn_id="spark_default",
         application="/opt/airflow/dags/gba/services/build_candidates.py",
         application_args=[
@@ -30,7 +31,7 @@ def build_repo_candidates(
             "--type",
             CandidatesType.REPO.value,
             "--top-n",
-            settings.CANDIDATES_SIZE,
+            str(settings.CANDIDATES_SIZE),
         ],
         packages=(
             "org.apache.hadoop:hadoop-aws:3.3.4,"
@@ -65,6 +66,7 @@ def build_org_candidates(
 
     task = SparkSubmitOperator(
         task_id="build_org_candidates",
+        task_display_name="Build organization candidates",
         conn_id="spark_default",
         application="/opt/airflow/dags/gba/services/build_candidates.py",
         application_args=[
@@ -75,7 +77,7 @@ def build_org_candidates(
             "--type",
             CandidatesType.ORG.value,
             "--top-n",
-            settings.CANDIDATES_SIZE,
+            str(settings.CANDIDATES_SIZE),
         ],
         packages=(
             "org.apache.hadoop:hadoop-aws:3.3.4,"

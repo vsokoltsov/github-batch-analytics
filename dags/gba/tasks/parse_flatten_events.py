@@ -20,6 +20,7 @@ def get_parse_flatten_events_task(
         f"s3a://{settings.S3_BRONZE_ZONE_BUCKET_NAME}/gh_events_flat/dt={dt}/hr={hour}/"
     )
     task = SparkSubmitOperator(
+        task_display_name="Parse flatten events",
         task_id="parse_flatten_events",
         conn_id="spark_default",
         application="/opt/airflow/dags/gba/services/parse_flatten.py",

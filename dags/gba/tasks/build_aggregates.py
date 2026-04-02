@@ -16,6 +16,7 @@ def build_repo_aggregates(
     settings = get_build_aggregates_settings()
     output_path = f"s3a://{settings.S3_SILVER_ZONE_BUCKET_NAME}/repo_aggregates/dt={dt}/hr={hour}/"
     task = SparkSubmitOperator(
+        task_display_name="Build repository aggregates",
         task_id="build_repo_aggregates",
         conn_id="spark_default",
         application="/opt/airflow/dags/gba/services/build_aggregates.py",
@@ -65,6 +66,7 @@ def build_org_aggregates(
     )
     task = SparkSubmitOperator(
         task_id="build_org_aggregates",
+        task_display_name="Build organization aggregates",
         conn_id="spark_default",
         application="/opt/airflow/dags/gba/services/build_aggregates.py",
         application_args=[
