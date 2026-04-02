@@ -57,12 +57,14 @@ class TestGithubAnalysisDag:
 
     def test_expected_tasks_exist(self, dag):
         expected = {
-            "get_github_events_archive",
+            "_get_github_events_archive",
             "parse_flatten_events",
             "build_repo_aggregates",
             "build_org_aggregates",
             "build_repo_candidates",
             "build_org_candidates",
+            "enrich_repo_candidates",
+            "enrich_org_candidates",
         }
         assert set(dag.task_dict) == expected
 
@@ -72,19 +74,31 @@ class TestGithubAnalysisDag:
         assert isinstance(dag.task_dict["build_org_aggregates"], SparkSubmitOperator)
 
     def test_dependencies(self, dag):
-        download = dag.task_dict["get_github_events_archive"]
+        download = dag.task_dict["_get_github_events_archive"]
         parse_flatten = dag.task_dict["parse_flatten_events"]
         repo = dag.task_dict["build_repo_aggregates"]
         org = dag.task_dict["build_org_aggregates"]
+        repo_candidates = dag.task_dict["build_repo_candidates"]
+        org_candidates = dag.task_dict["build_org_candidates"]
+        enrich_repo = dag.task_dict["enrich_repo_candidates"]
+        enrich_org = dag.task_dict["enrich_org_candidates"]
 
         assert download.downstream_task_ids == {"parse_flatten_events"}
-        assert parse_flatten.upstream_task_ids == {"get_github_events_archive"}
+        assert parse_flatten.upstream_task_ids == {"_get_github_events_archive"}
         assert parse_flatten.downstream_task_ids == {
             "build_repo_aggregates",
             "build_org_aggregates",
         }
         assert repo.upstream_task_ids == {"parse_flatten_events"}
+        assert repo.downstream_task_ids == {"build_repo_candidates"}
         assert org.upstream_task_ids == {"parse_flatten_events"}
+        assert org.downstream_task_ids == {"build_org_candidates"}
+        assert repo_candidates.upstream_task_ids == {"build_repo_aggregates"}
+        assert repo_candidates.downstream_task_ids == {"enrich_repo_candidates"}
+        assert org_candidates.upstream_task_ids == {"build_org_aggregates"}
+        assert org_candidates.downstream_task_ids == {"enrich_org_candidates"}
+        assert enrich_repo.upstream_task_ids == {"build_repo_candidates"}
+        assert enrich_org.upstream_task_ids == {"build_org_candidates"}
 
     def test_parse_flatten_task_configuration(self, dag):
         task = dag.task_dict["parse_flatten_events"]

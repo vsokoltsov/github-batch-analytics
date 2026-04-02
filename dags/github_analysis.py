@@ -76,4 +76,3 @@ with DAG(
 
     repo_candidates_task >> enrich_repo_candidates
     org_candidates_task >> enrich_org_candidates
-    # [repo_candidate_task, org_candidates_task] >> enrich_candidates_task

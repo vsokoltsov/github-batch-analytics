@@ -59,7 +59,7 @@ class TestBuildCandidatesTaskIntegration:
             == "s3a://gba-silver-zone-test/repo_candidates/dt=2026-03-08/hr=20/"
         )
         assert app_args[5] == "repo"
-        assert app_args[7] == 25
+        assert app_args[7] == "25"
 
     def test_org_task_attaches_to_dag_and_renders_templates(self, monkeypatch):
         monkeypatch.setenv("S3_SILVER_ZONE_BUCKET_NAME", "gba-silver-zone-test")
@@ -106,4 +106,4 @@ class TestBuildCandidatesTaskIntegration:
             == "s3a://gba-silver-zone-test/org_candidates/dt=2026-03-08/hr=20/"
         )
         assert app_args[5] == "org"
-        assert app_args[7] == 25
+        assert app_args[7] == "25"
