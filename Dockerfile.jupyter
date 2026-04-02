@@ -14,6 +14,11 @@ RUN python3 -m pip install --no-cache-dir \
   pyspark==3.5.4 \
   python-lsp-server \
   jedi \
-  jedi-language-server
+  jedi-language-server \
+  pandas \
+  dlt[filesystem] \
+  s3fs \
+  pyarrow \
+  requests
 
 USER spark
