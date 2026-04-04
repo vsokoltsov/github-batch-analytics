@@ -71,8 +71,15 @@ class BuildCandidates:
         metrics: list[str],
     ) -> DataFrame:
         candidate_frames: list[DataFrame] = []
+        available_metrics = [metric for metric in metrics if metric in df.columns]
 
-        for metric in metrics:
+        if not available_metrics:
+            raise ValueError(
+                f"None of the requested metrics exist in input dataframe. "
+                f"requested={metrics}, available={df.columns}"
+            )
+
+        for metric in available_metrics:
             ranked = (
                 df.filter(F.isnotnull(F.col(metric)))
                 .withColumn(

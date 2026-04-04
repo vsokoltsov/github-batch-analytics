@@ -243,3 +243,57 @@ class TestBuildCandidatesServiceUnit:
             "fork_events",
             "fork_events_ratio",
         ]
+
+    def test_organizations_skips_missing_metric_columns(
+        self,
+        spark,
+        tmp_path: Path,
+    ):
+        input_path = _write_parquet(
+            spark,
+            tmp_path,
+            [
+                {
+                    "org_id": 10,
+                    "org_login": "acme",
+                    "total_events": 10,
+                    "public_events_count": 8,
+                    "unique_actors": 4,
+                    "bot_events": 1,
+                    "push_events": 7,
+                    "push_events_ratio": 0.7,
+                    "composite_score": 2.5,
+                    "bot_ratio": 0.1,
+                    "repos_count": 3,
+                    "last_event_at": datetime(2026, 3, 30, 10, 0, 0),
+                    "dt": date(2026, 3, 30),
+                    "hr": 10,
+                }
+            ],
+        )
+        output_path = tmp_path / "org-candidates-sparse"
+
+        service = BuildCandidates(
+            spark=spark,
+            input_path=input_path,
+            output_path=str(output_path),
+            top_n=1,
+        )
+
+        service.organizations()
+
+        rows = spark.read.parquet(str(output_path)).collect()
+
+        assert len(rows) == 1
+        assert rows[0].org_id == 10
+        assert rows[0].selection_reasons == [
+            "bot_events",
+            "bot_ratio",
+            "composite_score",
+            "public_events_count",
+            "push_events",
+            "push_events_ratio",
+            "repos_count",
+            "total_events",
+            "unique_actors",
+        ]
