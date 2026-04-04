@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Iterator, cast
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, Iterator, Protocol, cast
 
 import dlt
 import numpy as np
@@ -15,6 +16,24 @@ from gba.services.utils import to_s3
 from gba.services.enrichment.errors import GitHubRateLimitExceeded
 
 logger = logging.getLogger(__name__)
+
+
+class DltPipelineRunner(Protocol):
+    last_trace: object | None
+
+    def extract(self, data: object, *, loader_file_format: str) -> object: ...
+
+    def normalize(self, workers: int) -> object: ...
+
+    def load(self, workers: int) -> Any: ...
+
+    def run(self, data: object, *, table_name: str) -> object: ...
+
+    def list_failed_jobs_in_package(self, load_id: str) -> list[object]: ...
+
+
+PipelineFactory = Callable[..., DltPipelineRunner]
+SourceFactory = Callable[[str, str, str, int], object]
 
 
 def _normalize_candidate_value(value: object) -> object:
@@ -91,7 +110,7 @@ def github_org_api_response(
 @dlt.transformer(
     data_from=github_org_api_response,
     name="github_org_snapshot",
-    write_disposition="merge",
+    write_disposition="append",
     primary_key="org_id",
 )
 def github_org_snapshot(org_response: dict) -> Iterator[DataItemWithMeta]:
@@ -191,59 +210,106 @@ def github_org_enrichment_source(
     return candidates, responses, snapshots, errors
 
 
+@dataclass
+class OrganizationEnrichmentPipeline:
+    output_bucket: str
+    input_path: str
+    dt: str
+    hr: int
+    github_token: str
+    pipeline_name: str = "github_org_enrichment"
+    pipelines_dir: str = "/tmp/dlt/pipelines"
+    dataset_name: str = "github_enrichment"
+    loader_file_format: str = "parquet"
+    normalize_workers: int = 1
+    load_workers: int = 1
+    pipeline_factory: PipelineFactory = field(default=dlt.pipeline, repr=False)
+    source_factory: SourceFactory = field(
+        default=github_org_enrichment_source,
+        repr=False,
+    )
+
+    def build_pipeline(self) -> DltPipelineRunner:
+        return self.pipeline_factory(
+            pipeline_name=self.pipeline_name,
+            pipelines_dir=self.pipelines_dir,
+            destination=filesystem(
+                bucket_url=f"s3://{self.output_bucket}",
+                layout="{table_name}/dt={dt}/hr={hr}/{load_id}.{file_id}.{ext}",
+                extra_placeholders={
+                    "dt": self.dt,
+                    "hr": str(self.hr),
+                },
+            ),
+            dataset_name=self.dataset_name,
+        )
+
+    def build_source(self) -> object:
+        return self.source_factory(
+            self.input_path,
+            self.github_token,
+            self.dt,
+            self.hr,
+        )
+
+    def output_paths(self) -> Dict[str, str]:
+        return {
+            "org_candidates_path": (
+                f"s3a://{self.output_bucket}/org_candidates/"
+                f"dt={self.dt}/hr={self.hr}/"
+            ),
+            "org_snapshot_path": (
+                f"s3a://{self.output_bucket}/github_org_snapshot/"
+                f"dt={self.dt}/hr={self.hr}/"
+            ),
+            "org_errors_path": (
+                f"s3a://{self.output_bucket}/github_org_snapshot_errors/"
+                f"dt={self.dt}/hr={self.hr}/"
+            ),
+        }
+
+    def save_trace(self, pipeline: DltPipelineRunner) -> None:
+        if pipeline.last_trace:
+            pipeline.run([pipeline.last_trace], table_name="_trace")
+
+    def log_failed_jobs(self, pipeline: DltPipelineRunner, load_info: Any) -> None:
+        for package in load_info.load_packages:
+            failed_jobs = pipeline.list_failed_jobs_in_package(package.load_id)
+            if failed_jobs:
+                logger.error("failed jobs in %s: %s", package.load_id, failed_jobs)
+
+    def run(self) -> Dict[str, str]:
+        pipeline = self.build_pipeline()
+        source = self.build_source()
+
+        extract_info = pipeline.extract(
+            data=source,
+            loader_file_format=self.loader_file_format,
+        )
+        logger.info("extract packages: %s", extract_info)
+
+        normalize_info = pipeline.normalize(workers=self.normalize_workers)
+        logger.info("normalized: %s", normalize_info)
+
+        load_info = pipeline.load(workers=self.load_workers)
+        logger.info("loaded packages: %s", load_info.load_packages)
+
+        self.save_trace(pipeline)
+        self.log_failed_jobs(pipeline, load_info)
+
+        return self.output_paths()
+
+
 def run_org_enrichment_pipeline(
     output_bucket: str,
     input_path: str,
     dt: str,
     hr: int,
 ) -> Dict[str, str]:
-    pipeline = dlt.pipeline(
-        pipeline_name="github_org_enrichment",
-        pipelines_dir="/tmp/dlt/pipelines",
-        destination=filesystem(
-            bucket_url=f"s3://{output_bucket}",
-            layout="{table_name}/dt={dt}/hr={hr}/{load_id}.{file_id}.{ext}",
-            extra_placeholders={
-                "dt": dt,
-                "hr": str(hr),
-            },
-        ),
-        dataset_name="github_enrichment",
-    )
-
-    source = github_org_enrichment_source(
-        candidate_path=input_path,
-        github_token=dlt.secrets["sources.github_enrichment.github_token"],
+    return OrganizationEnrichmentPipeline(
+        output_bucket=output_bucket,
+        input_path=input_path,
         dt=dt,
         hr=hr,
-    )
-
-    extract_info = pipeline.extract(data=source, loader_file_format="parquet")
-    logger.info("extract packages: %s", extract_info)
-
-    normalize_info = pipeline.normalize(workers=1)
-    logger.info("normalized: %s", normalize_info)
-
-    load_info = pipeline.load(workers=1)
-    logger.info("loaded packages: %s", load_info.load_packages)
-
-    trace = pipeline.last_trace
-    if trace:
-        pipeline.run([trace], table_name="_trace")
-
-    for package in load_info.load_packages:
-        failed_jobs = pipeline.list_failed_jobs_in_package(package.load_id)
-        if failed_jobs:
-            logger.error("failed jobs in %s: %s", package.load_id, failed_jobs)
-
-    return {
-        "org_candidates_path": (
-            f"s3a://{output_bucket}/org_candidates/dt={dt}/hr={hr}/"
-        ),
-        "org_snapshot_path": (
-            f"s3a://{output_bucket}/github_org_snapshot/dt={dt}/hr={hr}/"
-        ),
-        "org_errors_path": (
-            f"s3a://{output_bucket}/github_org_snapshot_errors/dt={dt}/hr={hr}/"
-        ),
-    }
+        github_token=dlt.secrets["sources.github_enrichment.github_token"],
+    ).run()
