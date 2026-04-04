@@ -28,6 +28,21 @@ output "silver_zone_bucket_arn" {
   value       = aws_s3_bucket.silver_zone.arn
 }
 
+output "dlt_state_bucket_name" {
+  description = "S3 bucket name for dlt pipeline state."
+  value       = aws_s3_bucket.dlt_state.bucket
+}
+
+output "dlt_state_bucket_arn" {
+  description = "S3 bucket ARN for dlt pipeline state."
+  value       = aws_s3_bucket.dlt_state.arn
+}
+
+output "dlt_state_bucket_access_policy_arn" {
+  description = "Managed IAM policy ARN granting access to the dlt state bucket."
+  value       = aws_iam_policy.dlt_state_bucket_access.arn
+}
+
 output "ecr_repository_name" {
   description = "ECR repository name for Airflow image."
   value       = aws_ecr_repository.airflow.name

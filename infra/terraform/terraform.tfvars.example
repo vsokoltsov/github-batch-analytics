@@ -3,11 +3,14 @@ aws_profile             = "gba-admin"
 landing_zone_bucket_name = "gba-landing-zone-REPLACE_WITH_UNIQUE_SUFFIX"
 bronze_zone_bucket_name  = "gba-bronze-zone-REPLACE_WITH_UNIQUE_SUFFIX"
 silver_zone_bucket_name  = "gba-silver-zone-REPLACE_WITH_UNIQUE_SUFFIX"
+dlt_state_bucket_name    = "gba-dlt-state-REPLACE_WITH_UNIQUE_SUFFIX"
 ecr_repository_name      = "github-batch-analytics-airflow"
 github_owner             = "REPLACE_WITH_GITHUB_OWNER"
 github_repository        = "github-batch-analytics"
 github_actions_branch    = "main"
 manage_github_actions_config = false
+dlt_state_access_role_names = []
+dlt_state_access_principal_arns = []
 # github_token is sensitive: pass via TF_VAR_github_token env var
 github_token             = "<GITHUB_TOKEN>"
 github_owner             = "<github owner name>"

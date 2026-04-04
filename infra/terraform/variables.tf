@@ -25,6 +25,11 @@ variable "silver_zone_bucket_name" {
   type        = string
 }
 
+variable "dlt_state_bucket_name" {
+  description = "Globally unique S3 bucket name for persisted dlt pipeline state."
+  type        = string
+}
+
 variable "ecr_repository_name" {
   description = "ECR repository name for Airflow image artifacts."
   type        = string
@@ -66,6 +71,18 @@ variable "github_actions_role_name" {
   description = "IAM role name for GitHub Actions OIDC."
   type        = string
   default     = "github-actions-ecr-push"
+}
+
+variable "dlt_state_access_role_names" {
+  description = "IAM role names that should receive the managed policy for the dlt state bucket."
+  type        = list(string)
+  default     = []
+}
+
+variable "dlt_state_access_principal_arns" {
+  description = "IAM principal ARNs that should be allowed in the dlt state bucket policy."
+  type        = list(string)
+  default     = []
 }
 
 variable "tags" {
