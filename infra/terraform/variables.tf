@@ -25,6 +25,11 @@ variable "silver_zone_bucket_name" {
   type        = string
 }
 
+variable "marts_bucket_name" {
+  description = "Globally unique S3 bucket name for curated mart data used by dashboards."
+  type        = string
+}
+
 variable "dlt_state_bucket_name" {
   description = "Globally unique S3 bucket name for persisted dlt pipeline state."
   type        = string
@@ -34,6 +39,29 @@ variable "ecr_repository_name" {
   description = "ECR repository name for Airflow image artifacts."
   type        = string
   default     = "github-batch-analytics-airflow"
+}
+
+variable "athena_database_name" {
+  description = "Glue/Athena database name for analytics tables."
+  type        = string
+  default     = "github_analytics"
+}
+
+variable "athena_workgroup_name" {
+  description = "Athena workgroup name."
+  type        = string
+  default     = "github-batch-analytics"
+}
+
+variable "athena_query_results_bucket_name" {
+  description = "S3 bucket name used by Athena for query results."
+  type        = string
+}
+
+variable "athena_enforce_workgroup_configuration" {
+  description = "Whether Athena should enforce workgroup-level settings."
+  type        = bool
+  default     = true
 }
 
 variable "github_owner" {

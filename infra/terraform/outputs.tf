@@ -28,6 +28,16 @@ output "silver_zone_bucket_arn" {
   value       = aws_s3_bucket.silver_zone.arn
 }
 
+output "marts_bucket_name" {
+  description = "S3 bucket name for curated dashboard marts."
+  value       = aws_s3_bucket.marts.bucket
+}
+
+output "marts_bucket_arn" {
+  description = "S3 bucket ARN for curated dashboard marts."
+  value       = aws_s3_bucket.marts.arn
+}
+
 output "dlt_state_bucket_name" {
   description = "S3 bucket name for dlt pipeline state."
   value       = aws_s3_bucket.dlt_state.bucket
@@ -51,6 +61,26 @@ output "ecr_repository_name" {
 output "ecr_repository_url" {
   description = "ECR repository URL for Airflow image pushes."
   value       = aws_ecr_repository.airflow.repository_url
+}
+
+output "athena_query_results_bucket_name" {
+  description = "S3 bucket name used for Athena query results."
+  value       = aws_s3_bucket.athena_query_results.bucket
+}
+
+output "athena_query_results_bucket_arn" {
+  description = "S3 bucket ARN used for Athena query results."
+  value       = aws_s3_bucket.athena_query_results.arn
+}
+
+output "athena_database_name" {
+  description = "Glue/Athena database name."
+  value       = aws_glue_catalog_database.analytics.name
+}
+
+output "athena_workgroup_name" {
+  description = "Athena workgroup name."
+  value       = aws_athena_workgroup.analytics.name
 }
 
 output "github_actions_role_arn" {
