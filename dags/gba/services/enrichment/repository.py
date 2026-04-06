@@ -46,6 +46,7 @@ def _normalize_candidate_value(value: object) -> object:
     name="repo_candidates",
     write_disposition="replace",
     primary_key="repo_full_name",
+    selected=False,
 )
 def repo_candidates_resource(candidate_path: str) -> Iterator[dict]:
     candidates = pd.read_parquet(to_s3(candidate_path))
@@ -128,7 +129,6 @@ def github_repo_snapshot(
         "owner_type": payload.get("owner", {}).get("type"),
         "description": payload.get("description"),
         "language": payload.get("language"),
-        "topics": payload.get("topics"),
         "license_spdx_id": (payload.get("license") or {}).get("spdx_id"),
         "default_branch": payload.get("default_branch"),
         "visibility": payload.get("visibility"),
@@ -191,19 +191,25 @@ def github_repo_snapshot_errors(repo_response: dict) -> Iterator[dict]:
 
 
 @dlt.transformer(
-    data_from=github_repo_snapshot,
+    data_from=github_repo_api_response,
     name="github_repo_topics",
     write_disposition="replace",
     primary_key=("repo_id", "topic"),
 )
-def github_repo_topics(snapshot: dict) -> Iterator[dict]:
-    for topic in snapshot.get("topics") or []:
+def github_repo_topics(repo_response: dict) -> Iterator[dict]:
+    if repo_response["status_code"] != 200:
+        return
+
+    payload = repo_response["payload"]
+    repo_id = payload.get("id")
+    repo_full_name = payload.get("full_name")
+    for topic in payload.get("topics") or []:
         yield {
-            "repo_id": snapshot["repo_id"],
-            "repo_full_name": snapshot["repo_full_name"],
+            "repo_id": repo_id,
+            "repo_full_name": repo_full_name,
             "topic": topic,
-            "dt": snapshot["dt"],
-            "hr": snapshot["hr"],
+            "dt": repo_response["dt"],
+            "hr": repo_response["hr"],
         }
 
 
@@ -222,7 +228,7 @@ def github_repo_enrichment_source(
     )
     snapshots = responses | github_repo_snapshot()
     errors = responses | github_repo_snapshot_errors()
-    topics = snapshots | github_repo_topics()
+    topics = responses | github_repo_topics()
     return candidates, responses, snapshots, errors, topics
 
 

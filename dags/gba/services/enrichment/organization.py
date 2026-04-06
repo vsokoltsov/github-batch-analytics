@@ -48,6 +48,7 @@ def _normalize_candidate_value(value: object) -> object:
     name="org_candidates",
     write_disposition="replace",
     primary_key="org_login",
+    selected=False,
 )
 def org_candidates_resource(candidate_path: str) -> Iterator[dict]:
     candidates = pd.read_parquet(to_s3(candidate_path))
