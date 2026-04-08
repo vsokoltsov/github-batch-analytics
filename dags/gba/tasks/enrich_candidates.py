@@ -15,6 +15,7 @@ def get_enrich_repo_candidates_task(
         task_id="enrich_repo_candidates",
         task_display_name="Enrich repository candidates",
         python_callable=run_repo_enrichment_pipeline,
+        multiple_outputs=True,
         op_kwargs={
             "output_bucket": settings.S3_BRONZE_ZONE_BUCKET_NAME,
             "input_path": input_path,
@@ -33,6 +34,7 @@ def get_enrich_org_candidates_task(
     return PythonOperator(
         task_id="enrich_org_candidates",
         task_display_name="Enrich organization candidates",
+        multiple_outputs=True,
         python_callable=run_org_enrichment_pipeline,
         op_kwargs={
             "output_bucket": settings.S3_BRONZE_ZONE_BUCKET_NAME,
