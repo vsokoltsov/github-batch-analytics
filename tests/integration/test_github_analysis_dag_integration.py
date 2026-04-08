@@ -10,7 +10,9 @@ from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOpe
 from airflow.sdk.definitions.context import Context
 from gba.settings.build_aggregates import get_build_aggregates_settings
 from gba.settings.build_candidates import get_build_candidates_settings
-from gba.settings.build_curated_marts import get_build_candidates_settings as get_build_marts_settings
+from gba.settings.build_curated_marts import (
+    get_build_candidates_settings as get_build_marts_settings,
+)
 from gba.settings.parse_flatten import get_parse_flatten_settings
 from gba.settings.get_archive import get_download_archive_settings
 

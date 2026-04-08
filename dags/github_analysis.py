@@ -12,6 +12,7 @@ from gba.tasks.enrich_candidates import (
     get_enrich_repo_candidates_task,
     get_enrich_org_candidates_task,
 )
+from gba.tasks.build_marts import build_repo_marts, build_org_marts
 
 with DAG(
     dag_id="github_batch_analysis",
@@ -67,6 +68,19 @@ with DAG(
         hour="{{ logical_date.hour }}",
     )
 
+    build_repository_marts = build_repo_marts(
+        candidates_path=repo_candidates.output_path,
+        github_snapshot_path=enrich_repo_candidates.output["repo_snapshot_path"],
+        dt="{{ ds }}",
+        hour="{{ logical_date.hour }}",
+    )
+    build_organization_marts = build_org_marts(
+        candidates_path=org_candidates.output_path,
+        github_snapshot_path=enrich_org_candidates.output["org_snapshot_path"],
+        dt="{{ ds }}",
+        hour="{{ logical_date.hour }}",
+    )
+
     download_step >> parse_flatten_task
 
     parse_flatten_task >> [repo_aggregate_task, org_aggregate_task]
@@ -76,3 +90,6 @@ with DAG(
 
     repo_candidates_task >> enrich_repo_candidates
     org_candidates_task >> enrich_org_candidates
+
+    enrich_repo_candidates >> build_repository_marts
+    enrich_org_candidates >> build_organization_marts
