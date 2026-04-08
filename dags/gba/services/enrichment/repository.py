@@ -280,20 +280,16 @@ class RepositoryEnrichmentPipeline:
 
     def output_paths(self) -> Dict[str, str]:
         return {
-            "repo_candidates_path": (
-                f"s3a://{self.output_bucket}/repo_candidates/"
-                f"dt={self.dt}/hr={self.hr}/"
-            ),
             "repo_snapshot_path": (
-                f"s3a://{self.output_bucket}/github_repo_snapshot/"
+                f"s3a://{self.output_bucket}/github_enrichment/github_repo_snapshot/"
                 f"dt={self.dt}/hr={self.hr}/"
             ),
             "repo_topics_path": (
-                f"s3a://{self.output_bucket}/github_repo_topics/"
+                f"s3a://{self.output_bucket}/github_enrichment/github_repo_topics/"
                 f"dt={self.dt}/hr={self.hr}/"
             ),
             "repo_errors_path": (
-                f"s3a://{self.output_bucket}/github_repo_snapshot_errors/"
+                f"s3a://{self.output_bucket}/github_enrichment/github_repo_snapshot_errors/"
                 f"dt={self.dt}/hr={self.hr}/"
             ),
         }

@@ -255,16 +255,12 @@ class OrganizationEnrichmentPipeline:
 
     def output_paths(self) -> Dict[str, str]:
         return {
-            "org_candidates_path": (
-                f"s3a://{self.output_bucket}/org_candidates/"
-                f"dt={self.dt}/hr={self.hr}/"
-            ),
             "org_snapshot_path": (
-                f"s3a://{self.output_bucket}/github_org_snapshot/"
+                f"s3a://{self.output_bucket}/github_enrichment/github_org_snapshot/"
                 f"dt={self.dt}/hr={self.hr}/"
             ),
             "org_errors_path": (
-                f"s3a://{self.output_bucket}/github_org_snapshot_errors/"
+                f"s3a://{self.output_bucket}/github_enrichment/github_org_snapshot_errors/"
                 f"dt={self.dt}/hr={self.hr}/"
             ),
         }
