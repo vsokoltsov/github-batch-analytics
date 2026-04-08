@@ -78,17 +78,17 @@ def test_repository_enrichment_pipeline_output_paths_are_partitioned() -> None:
     )
 
     assert pipeline.output_paths() == {
-        "repo_candidates_path": (
-            "s3a://bronze-bucket/repo_candidates/dt=2026-04-01/hr=7/"
-        ),
         "repo_snapshot_path": (
-            "s3a://bronze-bucket/github_repo_snapshot/dt=2026-04-01/hr=7/"
+            "s3a://bronze-bucket/github_enrichment/github_repo_snapshot/"
+            "dt=2026-04-01/hr=7/"
         ),
         "repo_topics_path": (
-            "s3a://bronze-bucket/github_repo_topics/dt=2026-04-01/hr=7/"
+            "s3a://bronze-bucket/github_enrichment/github_repo_topics/"
+            "dt=2026-04-01/hr=7/"
         ),
         "repo_errors_path": (
-            "s3a://bronze-bucket/github_repo_snapshot_errors/dt=2026-04-01/hr=7/"
+            "s3a://bronze-bucket/github_enrichment/github_repo_snapshot_errors/"
+            "dt=2026-04-01/hr=7/"
         ),
     }
 
@@ -151,5 +151,6 @@ def test_repository_enrichment_pipeline_run_uses_pipeline_lifecycle_and_returns_
         ("list_failed_jobs_in_package", "load-1"),
     ]
     assert output_paths["repo_snapshot_path"] == (
-        "s3a://bronze-bucket/github_repo_snapshot/dt=2026-04-01/hr=7/"
+        "s3a://bronze-bucket/github_enrichment/github_repo_snapshot/"
+        "dt=2026-04-01/hr=7/"
     )

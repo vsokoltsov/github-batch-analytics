@@ -10,6 +10,7 @@ from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOpe
 from airflow.sdk.definitions.context import Context
 from gba.settings.build_aggregates import get_build_aggregates_settings
 from gba.settings.build_candidates import get_build_candidates_settings
+from gba.settings.build_curated_marts import get_build_candidates_settings as get_build_marts_settings
 from gba.settings.parse_flatten import get_parse_flatten_settings
 from gba.settings.get_archive import get_download_archive_settings
 
@@ -24,6 +25,7 @@ TEST_ENV = {
     "AWS_CONFIG_FILE": "/tmp/aws/config",
     "AWS_SHARED_CREDENTIALS_FILE": "/tmp/aws/credentials",
     "CANDIDATES_SIZE": "25",
+    "S3_MARTS_BUCKET_NAME": "test-marts",
 }
 
 
@@ -34,6 +36,7 @@ def dagbag() -> DagBag:
         get_parse_flatten_settings.cache_clear()
         get_build_aggregates_settings.cache_clear()
         get_build_candidates_settings.cache_clear()
+        get_build_marts_settings.cache_clear()
         return DagBag(dag_folder=str(DAG_FILE), include_examples=False)
 
 
@@ -65,6 +68,8 @@ class TestGithubAnalysisDag:
             "build_org_candidates",
             "enrich_repo_candidates",
             "enrich_org_candidates",
+            "build_repo_marts",
+            "build_org_marts",
         }
         assert set(dag.task_dict) == expected
 
@@ -82,6 +87,8 @@ class TestGithubAnalysisDag:
         org_candidates = dag.task_dict["build_org_candidates"]
         enrich_repo = dag.task_dict["enrich_repo_candidates"]
         enrich_org = dag.task_dict["enrich_org_candidates"]
+        build_repo_marts = dag.task_dict["build_repo_marts"]
+        build_org_marts = dag.task_dict["build_org_marts"]
 
         assert download.downstream_task_ids == {"parse_flatten_events"}
         assert parse_flatten.upstream_task_ids == {"_get_github_events_archive"}
@@ -98,7 +105,11 @@ class TestGithubAnalysisDag:
         assert org_candidates.upstream_task_ids == {"build_org_aggregates"}
         assert org_candidates.downstream_task_ids == {"enrich_org_candidates"}
         assert enrich_repo.upstream_task_ids == {"build_repo_candidates"}
+        assert enrich_repo.downstream_task_ids == {"build_repo_marts"}
         assert enrich_org.upstream_task_ids == {"build_org_candidates"}
+        assert enrich_org.downstream_task_ids == {"build_org_marts"}
+        assert build_repo_marts.upstream_task_ids == {"enrich_repo_candidates"}
+        assert build_org_marts.upstream_task_ids == {"enrich_org_candidates"}
 
     def test_parse_flatten_task_configuration(self, dag):
         task = dag.task_dict["parse_flatten_events"]
@@ -168,5 +179,6 @@ class TestGithubAnalysisDag:
             get_parse_flatten_settings.cache_clear()
             get_build_aggregates_settings.cache_clear()
             get_build_candidates_settings.cache_clear()
+            get_build_marts_settings.cache_clear()
             dagbag = DagBag(dag_folder="dags", include_examples=False)
         assert dagbag.import_errors == {}

@@ -78,14 +78,13 @@ def test_organization_enrichment_pipeline_output_paths_are_partitioned() -> None
     )
 
     assert pipeline.output_paths() == {
-        "org_candidates_path": (
-            "s3a://bronze-bucket/org_candidates/dt=2026-04-01/hr=7/"
-        ),
         "org_snapshot_path": (
-            "s3a://bronze-bucket/github_org_snapshot/dt=2026-04-01/hr=7/"
+            "s3a://bronze-bucket/github_enrichment/github_org_snapshot/"
+            "dt=2026-04-01/hr=7/"
         ),
         "org_errors_path": (
-            "s3a://bronze-bucket/github_org_snapshot_errors/dt=2026-04-01/hr=7/"
+            "s3a://bronze-bucket/github_enrichment/github_org_snapshot_errors/"
+            "dt=2026-04-01/hr=7/"
         ),
     }
 
@@ -148,5 +147,6 @@ def test_organization_enrichment_pipeline_run_uses_pipeline_lifecycle_and_return
         ("list_failed_jobs_in_package", "load-1"),
     ]
     assert output_paths["org_snapshot_path"] == (
-        "s3a://bronze-bucket/github_org_snapshot/dt=2026-04-01/hr=7/"
+        "s3a://bronze-bucket/github_enrichment/github_org_snapshot/"
+        "dt=2026-04-01/hr=7/"
     )
