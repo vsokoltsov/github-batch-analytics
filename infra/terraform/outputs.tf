@@ -83,6 +83,16 @@ output "athena_workgroup_name" {
   value       = aws_athena_workgroup.analytics.name
 }
 
+output "athena_repository_table_name" {
+  description = "Athena/Glue table name for repository marts."
+  value       = aws_glue_catalog_table.repository_marts.name
+}
+
+output "athena_organization_table_name" {
+  description = "Athena/Glue table name for organization marts."
+  value       = aws_glue_catalog_table.organization_marts.name
+}
+
 output "github_actions_role_arn" {
   description = "IAM role ARN that GitHub Actions assumes via OIDC."
   value       = aws_iam_role.github_actions.arn

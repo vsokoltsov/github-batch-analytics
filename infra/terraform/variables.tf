@@ -64,6 +64,24 @@ variable "athena_enforce_workgroup_configuration" {
   default     = true
 }
 
+variable "athena_partition_projection_start_date" {
+  description = "Earliest partition date exposed through Athena partition projection."
+  type        = string
+  default     = "2026-01-01"
+}
+
+variable "athena_repository_table_name" {
+  description = "Athena/Glue table name for repository marts."
+  type        = string
+  default     = "repositories"
+}
+
+variable "athena_organization_table_name" {
+  description = "Athena/Glue table name for organization marts."
+  type        = string
+  default     = "organizations"
+}
+
 variable "github_owner" {
   description = "GitHub owner/org name for this repository."
   type        = string
