@@ -54,8 +54,8 @@ def test_build_repo_marts_joins_and_deduplicates_overlapping_columns(
 
     assert result.columns.count("repo_id") == 1
     assert result.columns.count("repo_full_name") == 1
-    assert result.columns.count("dt") == 1
-    assert result.columns.count("hr") == 1
+    assert "dt" not in result.columns
+    assert "hr" not in result.columns
     assert set(result.columns) >= {
         "repo_id",
         "repo_full_name",
@@ -63,8 +63,6 @@ def test_build_repo_marts_joins_and_deduplicates_overlapping_columns(
         "repo_name",
         "owner_login",
         "language",
-        "dt",
-        "hr",
     }
 
     row = result.collect()[0].asDict()
@@ -73,11 +71,9 @@ def test_build_repo_marts_joins_and_deduplicates_overlapping_columns(
     assert row["repo_name"] == "repo-one"
     assert row["owner_login"] == "acme"
     assert row["language"] == "Python"
-    assert row["dt"] == "2026-04-06"
-    assert row["hr"] == 13
 
 
-def test_build_org_marts_keeps_candidate_partition_columns_and_left_join_rows(
+def test_build_org_marts_drops_partition_columns_and_keeps_left_join_rows(
     spark, tmp_path: Path
 ) -> None:
     candidates_path = _write_parquet(
@@ -127,15 +123,13 @@ def test_build_org_marts_keeps_candidate_partition_columns_and_left_join_rows(
 
     assert result.columns.count("org_id") == 1
     assert result.columns.count("org_login") == 1
-    assert result.columns.count("dt") == 1
-    assert result.columns.count("hr") == 1
+    assert "dt" not in result.columns
+    assert "hr" not in result.columns
 
     rows = [row.asDict() for row in result.collect()]
 
     assert rows[0]["org_id"] == 10
     assert rows[0]["org_name"] == "Acme Org"
-    assert rows[0]["dt"] == "2026-04-06"
-    assert rows[0]["hr"] == 13
 
     assert rows[1]["org_id"] == 11
     assert rows[1]["org_login"] == "missing-org"

@@ -52,6 +52,7 @@ class BuildMarts:
             left_key="repo_id",
             right_key="repo_id",
         )
+        df = df.drop("dt", "hr")
         df.write.mode("overwrite").parquet(self.output_path)
 
     def organizations(self) -> None:
@@ -61,6 +62,7 @@ class BuildMarts:
             left_key="org_id",
             right_key="org_id",
         )
+        df = df.drop("dt", "hr")
         df.write.mode("overwrite").parquet(self.output_path)
 
 
