@@ -1,5 +1,9 @@
 # Github Batch Analytics
 
+## Local setup
+
+* Populate `./dlt/secrets.yml`
+
 ## Diagram
 
 ```
