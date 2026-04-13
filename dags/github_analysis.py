@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from airflow import DAG
+from airflow.sdk import TaskGroup
 
 from gba.tasks.get_archive import get_github_events_archive
 from gba.tasks.build_aggregates import build_org_aggregates, build_repo_aggregates
@@ -13,6 +14,26 @@ from gba.tasks.enrich_candidates import (
     get_enrich_org_candidates_task,
 )
 from gba.tasks.build_marts import build_repo_marts, build_org_marts
+from gba.tasks.build_dashboard_views import (
+    repository_summary_dashboard,
+    repository_event_type_dashboard,
+    repository_fork_dashboard,
+    repository_freshness_dashboard,
+    repository_language_dashboard,
+    repository_owner_dashboard,
+    repository_top_100_dashboard,
+    repository_visibility_dashboard,
+    org_summary_dashboard,
+    org_company_dashboard,
+    org_location_dashboard,
+    org_size_dashboard,
+    org_social_dashboard,
+    org_top_100_dashboard,
+    org_verified_distribution_dashboard,
+    common_rollup_dashboard,
+    common_language_location_dashboard,
+    common_verified_dashboard,
+)
 
 with DAG(
     dag_id="github_batch_analysis",
@@ -80,6 +101,107 @@ with DAG(
         dt="{{ ds }}",
         hour="{{ logical_date.hour }}",
     )
+    build_repository_marts_task = build_repository_marts.task
+    build_organization_marts_task = build_organization_marts.task
+
+    with TaskGroup(group_id="repository_dashboards") as repository_dashboards:
+        repo_summary = repository_summary_dashboard(
+            input_path=build_repository_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        repo_event_type = repository_event_type_dashboard(
+            input_path=build_repository_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        repo_fork = repository_fork_dashboard(
+            input_path=build_repository_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        repo_freshness = repository_freshness_dashboard(
+            input_path=build_repository_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        repo_language = repository_language_dashboard(
+            input_path=build_repository_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        repo_owner = repository_owner_dashboard(
+            input_path=build_repository_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        repo_top_100 = repository_top_100_dashboard(
+            input_path=build_repository_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        repo_visibility = repository_visibility_dashboard(
+            input_path=build_repository_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+
+    with TaskGroup(group_id="organization_dashboards") as organization_dashboards:
+        org_summary = org_summary_dashboard(
+            input_path=build_organization_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        org_company = org_company_dashboard(
+            input_path=build_organization_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        org_location = org_location_dashboard(
+            input_path=build_organization_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        org_size = org_size_dashboard(
+            input_path=build_organization_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        org_social = org_social_dashboard(
+            input_path=build_organization_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        org_top_100 = org_top_100_dashboard(
+            input_path=build_organization_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        org_verified_distribution = org_verified_distribution_dashboard(
+            input_path=build_organization_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+
+    with TaskGroup(group_id="common_dashboards") as common_dashboards:
+        common_rollup = common_rollup_dashboard(
+            repo_path=build_repository_marts.output_path,
+            org_path=build_organization_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        common_language_location = common_language_location_dashboard(
+            repo_path=build_repository_marts.output_path,
+            org_path=build_organization_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
+        common_verified = common_verified_dashboard(
+            repo_path=build_repository_marts.output_path,
+            org_path=build_organization_marts.output_path,
+            dt="{{ ds }}",
+            hr="{{ logical_date.hour }}",
+        )
 
     download_step >> parse_flatten_task
 
@@ -91,5 +213,9 @@ with DAG(
     repo_candidates_task >> enrich_repo_candidates
     org_candidates_task >> enrich_org_candidates
 
-    enrich_repo_candidates >> build_repository_marts
-    enrich_org_candidates >> build_organization_marts
+    enrich_repo_candidates >> build_repository_marts_task
+    enrich_org_candidates >> build_organization_marts_task
+
+    build_repository_marts_task >> repository_dashboards
+    build_organization_marts_task >> organization_dashboards
+    [build_repository_marts_task, build_organization_marts_task] >> common_dashboards
