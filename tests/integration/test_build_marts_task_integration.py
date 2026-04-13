@@ -30,7 +30,7 @@ class TestBuildMartsTaskIntegration:
             schedule=None,
             catchup=False,
         ):
-            task = build_repo_marts(
+            event = build_repo_marts(
                 candidates_path=(
                     "s3a://gba-silver-zone-test/repo_candidates/"
                     "dt={{ ds }}/hr={{ logical_date.hour }}/"
@@ -42,6 +42,7 @@ class TestBuildMartsTaskIntegration:
                 dt="{{ ds }}",
                 hour="{{ logical_date.hour }}",
             )
+            task = event.task
 
         context = cast(
             Context,
@@ -65,6 +66,10 @@ class TestBuildMartsTaskIntegration:
         )
         assert app_args[5] == "s3a://gba-marts-test/repositories/dt=2026-03-08/hr=20/"
         assert app_args[7] == "repo"
+        assert (
+            event.output_path
+            == "s3a://gba-marts-test/repositories/dt={{ ds }}/hr={{ logical_date.hour }}/"
+        )
 
     def test_org_task_attaches_to_dag_and_renders_templates(self, monkeypatch):
         monkeypatch.setenv("S3_MARTS_BUCKET_NAME", "gba-marts-test")
@@ -82,7 +87,7 @@ class TestBuildMartsTaskIntegration:
             schedule=None,
             catchup=False,
         ):
-            task = build_org_marts(
+            event = build_org_marts(
                 candidates_path=(
                     "s3a://gba-silver-zone-test/org_candidates/"
                     "dt={{ ds }}/hr={{ logical_date.hour }}/"
@@ -94,6 +99,7 @@ class TestBuildMartsTaskIntegration:
                 dt="{{ ds }}",
                 hour="{{ logical_date.hour }}",
             )
+            task = event.task
 
         context = cast(
             Context,
@@ -117,3 +123,7 @@ class TestBuildMartsTaskIntegration:
         )
         assert app_args[5] == "s3a://gba-marts-test/organizations/dt=2026-03-08/hr=20/"
         assert app_args[7] == "org"
+        assert (
+            event.output_path
+            == "s3a://gba-marts-test/organizations/dt={{ ds }}/hr={{ logical_date.hour }}/"
+        )
