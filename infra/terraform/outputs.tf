@@ -93,6 +93,11 @@ output "athena_organization_table_name" {
   value       = aws_glue_catalog_table.organization_marts.name
 }
 
+output "athena_dashboard_table_names" {
+  description = "Athena/Glue table names for dashboard datasets."
+  value       = { for key, table in aws_glue_catalog_table.dashboard_tables : key => table.name }
+}
+
 output "github_actions_role_arn" {
   description = "IAM role ARN that GitHub Actions assumes via OIDC."
   value       = aws_iam_role.github_actions.arn
