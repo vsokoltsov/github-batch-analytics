@@ -13,8 +13,14 @@ black-fix:
 ruff:
 	uv run ruff check dags/ tests/ --fix
 
+sqlfluff:
+	uv run sqlfluff lint -v dags/gba/services/dashboards
+
+sqlfluff-fix:
+	uv run sqlfluff fix dags/gba/services/dashboards
+
 lint:
-	make ty & make black-fix & make ruff
+	make ty & make black-fix & make ruff & make sqlfluff
 
 notebook:
 	PYTHONPATH=. uv run jupyter lab

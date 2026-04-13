@@ -12,7 +12,7 @@ jobs:
       PYTHONPATH: dags
     strategy:
       matrix:
-        linter: [ty, black, ruff]
+        linter: [ty, black, ruff, sqlfluff]
       fail-fast: false
     steps:
       - name: Checkout
@@ -37,6 +37,8 @@ jobs:
             uv run black --check dags/ tests/
           elif [ "${{ matrix.linter }}" = "ruff" ]; then
             uv run ruff check dags/ tests/
+          elif [ "${{ matrix.linter }}" = "sqlfluff" ]; then
+            uv run sqlfluff lint dags/gba/services/dashboards
           else
             echo "Unknown linter: ${{ matrix.linter }}"
             exit 1

@@ -2,15 +2,33 @@ select
     event_type,
     event_count
 from (
-    select 'push_events' as event_type, sum(push_events) as event_count from repo_marts
+    select
+        'push_events' as event_type,
+        sum(push_events) as event_count
+    from repo_marts
     union all
-    select 'pull_request_events', sum(pull_request_events) from repo_marts
+    select
+        'pull_request_events' as event_type, -- noqa: AL03
+        sum(pull_request_events) as event_count -- noqa: AL03
+    from repo_marts
     union all
-    select 'issue_comment_events', sum(issue_comment_events) from repo_marts
+    select
+        'issue_comment_events' as event_type, -- noqa: AL03
+        sum(issue_comment_events) as event_count -- noqa: AL03
+    from repo_marts
     union all
-    select 'issues_events', sum(issues_events) from repo_marts
+    select
+        'issues_events' as event_type, -- noqa: AL03
+        sum(issues_events) as event_count -- noqa: AL03
+    from repo_marts
     union all
-    select 'fork_events', sum(fork_events) from repo_marts
+    select
+        'fork_events' as event_type, -- noqa: AL03
+        sum(fork_events) as event_count -- noqa: AL03
+    from repo_marts
     union all
-    select 'watch_events', sum(watch_events) from repo_marts
+    select
+        'watch_events' as event_type, -- noqa: AL03
+        sum(watch_events) as event_count -- noqa: AL03
+    from repo_marts
 )
