@@ -4,7 +4,7 @@ select
     max(repo_name) as repo_name,
     max(owner_login) as owner_login,
     max(owner_type) as owner_type,
-    max(language) as "language", -- noqa: RF04
+    max(language) as language, -- noqa: RF04
     max(visibility) as visibility,
     max(is_fork) as is_fork,
     max(is_archived) as is_archived,

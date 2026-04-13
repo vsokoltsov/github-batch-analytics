@@ -2,7 +2,7 @@ select
     org_id,
     org_login,
     max(org_name) as org_name,
-    max(location) as "location", -- noqa: RF04
+    max(location) as location, -- noqa: RF04
     max(company) as company,
     max(blog) as blog,
     max(email) as email,
@@ -12,7 +12,7 @@ select
     max(has_repository_projects) as has_repository_projects,
     max(public_repos) as public_repos,
     max(public_gists) as public_gists,
-    max(followers) as "followers", -- noqa: RF04
+    max(followers) as followers, -- noqa: RF04
     max(following) as following, -- noqa: RF04
     sum(total_events) as total_events,
     sum(push_events) as push_events,

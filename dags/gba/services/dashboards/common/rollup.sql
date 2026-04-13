@@ -3,7 +3,7 @@ select
     r.repo_full_name,
     max(r.repo_name) as repo_name,
     max(r.owner_login) as owner_login,
-    max(r.language) as "language", -- noqa: RF04
+    max(r.language) as language, -- noqa: RF04
     sum(r.total_events) as repo_total_events,
     avg(r.composite_score) as repo_avg_composite_score,
     max(r.stargazers_count) as stargazers_count,

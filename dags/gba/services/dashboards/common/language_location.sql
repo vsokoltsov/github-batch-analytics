@@ -1,5 +1,5 @@
 select
-    coalesce(r.language, 'Unknown') as "language", -- noqa: RF04
+    coalesce(r.language, 'Unknown') as language, -- noqa: RF04
     coalesce(o.location, 'Unknown') as org_location,
     count(*) as repo_count,
     sum(r.total_events) as total_events
