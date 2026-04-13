@@ -1,7 +1,13 @@
+from typing import NamedTuple
 from airflow.models.xcom_arg import XComArg
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from gba.settings.build_curated_marts import get_build_candidates_settings
 from gba.settings.enums import CandidatesType
+
+
+class BuildMartsEvent(NamedTuple):
+    task: SparkSubmitOperator
+    output_path: str
 
 
 def build_repo_marts(
@@ -9,13 +15,13 @@ def build_repo_marts(
     github_snapshot_path: str | XComArg,
     dt: str,
     hour: str,
-):
+) -> BuildMartsEvent:
     settings = get_build_candidates_settings()
     output_path = (
         f"s3a://{settings.S3_MARTS_BUCKET_NAME}/repositories/dt={dt}/hr={hour}/"
     )
 
-    return SparkSubmitOperator(
+    task = SparkSubmitOperator(
         task_id="build_repo_marts",
         task_display_name="Build repository marts",
         conn_id="spark_default",
@@ -50,6 +56,7 @@ def build_repo_marts(
             "spark.executorEnv.PYTHONPATH": "/opt/airflow/dags",
         },
     )
+    return BuildMartsEvent(task=task, output_path=output_path)
 
 
 def build_org_marts(
@@ -57,13 +64,13 @@ def build_org_marts(
     github_snapshot_path: str | XComArg,
     dt: str,
     hour: str,
-):
+) -> BuildMartsEvent:
     settings = get_build_candidates_settings()
     output_path = (
         f"s3a://{settings.S3_MARTS_BUCKET_NAME}/organizations/dt={dt}/hr={hour}/"
     )
 
-    return SparkSubmitOperator(
+    task = SparkSubmitOperator(
         task_id="build_org_marts",
         task_display_name="Build organization marts",
         conn_id="spark_default",
@@ -98,3 +105,4 @@ def build_org_marts(
             "spark.executorEnv.PYTHONPATH": "/opt/airflow/dags",
         },
     )
+    return BuildMartsEvent(task=task, output_path=output_path)
