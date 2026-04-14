@@ -30,13 +30,3 @@ RUN pip install --no-cache-dir apache-airflow-providers-apache-spark
 
 # Include the repository DAGs inside the Airflow image so the scheduler sees them.
 COPY dags/ /opt/airflow/dags/
-
-# Pre-fetch Spark AWS jars into Ivy cache during image build to avoid
-# downloading them at task runtime.
-RUN mkdir -p /home/airflow/.ivy2 \
-  && printf 'from pyspark.sql import SparkSession\nspark = SparkSession.builder.master("local[1]").appName("warmup").getOrCreate()\nspark.stop()\n' > /tmp/spark_warmup.py \
-  && /opt/spark/bin/spark-submit \
-    --master local[1] \
-    --packages org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262 \
-    /tmp/spark_warmup.py \
-  && rm -f /tmp/spark_warmup.py
