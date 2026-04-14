@@ -34,7 +34,7 @@ with DAG(
         "retry_delay": timedelta(minutes=1),
         "retry_exponential_backoff": True,
         "max_retry_delay": timedelta(minutes=15),
-    }
+    },
 ) as dag:
     download_step = get_github_events_archive(
         landing_date="{{ ds }}",
