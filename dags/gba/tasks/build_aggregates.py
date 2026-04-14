@@ -3,6 +3,7 @@ from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOpe
 from typing import NamedTuple
 from gba.settings.enums import CandidatesType
 from gba.settings.build_aggregates import get_build_aggregates_settings
+from gba.tasks.spark_conf import build_spark_conf
 
 
 class BuildAggregateEvent(NamedTuple):
@@ -36,23 +37,12 @@ def build_repo_aggregates(
             "org.apache.hadoop:hadoop-aws:3.3.4,"
             "com.amazonaws:aws-java-sdk-bundle:1.12.262"
         ),
-        conf={
-            "spark.master": settings.SPARK_MASTER_URL,
-            "spark.cores.max": "2",
-            "spark.executor.cores": "1",
-            "spark.executor.memory": "1g",
-            "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
-            "spark.hadoop.fs.s3a.aws.credentials.provider": (
-                "com.amazonaws.auth.DefaultAWSCredentialsProviderChain"
-            ),
-            "spark.executorEnv.AWS_PROFILE": settings.AWS_PROFILE,
-            "spark.executorEnv.AWS_SDK_LOAD_CONFIG": "1",
-            "spark.executorEnv.AWS_CONFIG_FILE": settings.AWS_CONFIG_FILE,
-            "spark.executorEnv.AWS_SHARED_CREDENTIALS_FILE": (
-                settings.AWS_SHARED_CREDENTIALS_FILE
-            ),
-            "spark.executorEnv.PYTHONPATH": "/opt/airflow/dags",
-        },
+        conf=build_spark_conf(
+            spark_master_url=settings.SPARK_MASTER_URL,
+            aws_profile=settings.AWS_PROFILE,
+            aws_config_file=settings.AWS_CONFIG_FILE,
+            aws_shared_credentials_file=settings.AWS_SHARED_CREDENTIALS_FILE,
+        ),
     )
     return BuildAggregateEvent(task=task, output_path=output_path)
 
@@ -85,22 +75,11 @@ def build_org_aggregates(
             "org.apache.hadoop:hadoop-aws:3.3.4,"
             "com.amazonaws:aws-java-sdk-bundle:1.12.262"
         ),
-        conf={
-            "spark.master": settings.SPARK_MASTER_URL,
-            "spark.cores.max": "2",
-            "spark.executor.cores": "1",
-            "spark.executor.memory": "1g",
-            "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
-            "spark.hadoop.fs.s3a.aws.credentials.provider": (
-                "com.amazonaws.auth.DefaultAWSCredentialsProviderChain"
-            ),
-            "spark.executorEnv.AWS_PROFILE": settings.AWS_PROFILE,
-            "spark.executorEnv.AWS_SDK_LOAD_CONFIG": "1",
-            "spark.executorEnv.AWS_CONFIG_FILE": settings.AWS_CONFIG_FILE,
-            "spark.executorEnv.AWS_SHARED_CREDENTIALS_FILE": (
-                settings.AWS_SHARED_CREDENTIALS_FILE
-            ),
-            "spark.executorEnv.PYTHONPATH": "/opt/airflow/dags",
-        },
+        conf=build_spark_conf(
+            spark_master_url=settings.SPARK_MASTER_URL,
+            aws_profile=settings.AWS_PROFILE,
+            aws_config_file=settings.AWS_CONFIG_FILE,
+            aws_shared_credentials_file=settings.AWS_SHARED_CREDENTIALS_FILE,
+        ),
     )
     return BuildAggregateEvent(task=task, output_path=output_path)
