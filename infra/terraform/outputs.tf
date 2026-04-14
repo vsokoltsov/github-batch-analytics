@@ -1,6 +1,6 @@
 output "landing_zone_bucket_name" {
   description = "S3 bucket name for landing zone."
-  value       = aws_s3_bucket.landing_zone.bucket
+  value       = module.storage.landing_zone_bucket_name
 }
 
 output "aws_region" {
@@ -15,122 +15,122 @@ output "aws_profile" {
 
 output "landing_zone_bucket_arn" {
   description = "S3 bucket ARN for landing zone."
-  value       = aws_s3_bucket.landing_zone.arn
+  value       = module.storage.landing_zone_bucket_arn
 }
 
 output "bronze_zone_bucket_name" {
   description = "S3 bucket name for bronze zone."
-  value       = aws_s3_bucket.bronze_zone.bucket
+  value       = module.storage.bronze_zone_bucket_name
 }
 
 output "bronze_zone_bucket_arn" {
   description = "S3 bucket ARN for bronze zone."
-  value       = aws_s3_bucket.bronze_zone.arn
+  value       = module.storage.bronze_zone_bucket_arn
 }
 
 output "silver_zone_bucket_name" {
   description = "S3 bucket name for silver zone."
-  value       = aws_s3_bucket.silver_zone.bucket
+  value       = module.storage.silver_zone_bucket_name
 }
 
 output "silver_zone_bucket_arn" {
   description = "S3 bucket ARN for silver zone."
-  value       = aws_s3_bucket.silver_zone.arn
+  value       = module.storage.silver_zone_bucket_arn
 }
 
 output "marts_bucket_name" {
   description = "S3 bucket name for curated dashboard marts."
-  value       = aws_s3_bucket.marts.bucket
+  value       = module.storage.marts_bucket_name
 }
 
 output "marts_bucket_arn" {
   description = "S3 bucket ARN for curated dashboard marts."
-  value       = aws_s3_bucket.marts.arn
+  value       = module.storage.marts_bucket_arn
 }
 
 output "dlt_state_bucket_name" {
   description = "S3 bucket name for dlt pipeline state."
-  value       = aws_s3_bucket.dlt_state.bucket
+  value       = module.storage.dlt_state_bucket_name
 }
 
 output "dlt_state_bucket_arn" {
   description = "S3 bucket ARN for dlt pipeline state."
-  value       = aws_s3_bucket.dlt_state.arn
+  value       = module.storage.dlt_state_bucket_arn
 }
 
 output "logging_bucket_name" {
   description = "S3 bucket name for Airflow remote logs."
-  value       = aws_s3_bucket.logging.bucket
+  value       = module.storage.logging_bucket_name
 }
 
 output "dlt_state_bucket_access_policy_arn" {
   description = "Managed IAM policy ARN granting access to the dlt state bucket."
-  value       = aws_iam_policy.dlt_state_bucket_access.arn
+  value       = module.storage.dlt_state_bucket_access_policy_arn
 }
 
 output "ecr_repository_name" {
   description = "ECR repository name for Airflow image."
-  value       = aws_ecr_repository.airflow.name
+  value       = module.registry.repository_name
 }
 
 output "ecr_repository_url" {
   description = "ECR repository URL for Airflow image pushes."
-  value       = aws_ecr_repository.airflow.repository_url
+  value       = module.registry.repository_url
 }
 
 output "athena_query_results_bucket_name" {
   description = "S3 bucket name used for Athena query results."
-  value       = aws_s3_bucket.athena_query_results.bucket
+  value       = module.catalog.athena_query_results_bucket_name
 }
 
 output "athena_query_results_bucket_arn" {
   description = "S3 bucket ARN used for Athena query results."
-  value       = aws_s3_bucket.athena_query_results.arn
+  value       = module.catalog.athena_query_results_bucket_arn
 }
 
 output "athena_database_name" {
   description = "Glue/Athena database name."
-  value       = aws_glue_catalog_database.analytics.name
+  value       = module.catalog.athena_database_name
 }
 
 output "athena_workgroup_name" {
   description = "Athena workgroup name."
-  value       = aws_athena_workgroup.analytics.name
+  value       = module.catalog.athena_workgroup_name
 }
 
 output "athena_repository_table_name" {
   description = "Athena/Glue table name for repository marts."
-  value       = aws_glue_catalog_table.repository_marts.name
+  value       = module.catalog.athena_repository_table_name
 }
 
 output "athena_organization_table_name" {
   description = "Athena/Glue table name for organization marts."
-  value       = aws_glue_catalog_table.organization_marts.name
+  value       = module.catalog.athena_organization_table_name
 }
 
 output "athena_dashboard_table_names" {
   description = "Athena/Glue table names for dashboard datasets."
-  value       = { for key, table in aws_glue_catalog_table.dashboard_tables : key => table.name }
+  value       = module.catalog.athena_dashboard_table_names
 }
 
 output "github_actions_role_arn" {
   description = "IAM role ARN that GitHub Actions assumes via OIDC."
-  value       = aws_iam_role.github_actions.arn
+  value       = module.identity.github_actions_role_arn
 }
 
 output "eks_cluster_name" {
   description = "EKS cluster name."
-  value       = module.eks.cluster_name
+  value       = module.eks_cluster.cluster_name
 }
 
 output "eks_cluster_endpoint" {
   description = "EKS cluster API endpoint."
-  value       = module.eks.cluster_endpoint
+  value       = module.eks_cluster.cluster_endpoint
 }
 
 output "eks_cluster_oidc_issuer_url" {
   description = "OIDC issuer URL for the EKS cluster."
-  value       = module.eks.cluster_oidc_issuer_url
+  value       = module.eks_cluster.cluster_oidc_issuer_url
 }
 
 output "kubernetes_namespace" {
@@ -145,31 +145,31 @@ output "kubernetes_service_account_name" {
 
 output "airflow_runtime_role_arn" {
   description = "IAM role ARN used by Airflow and Spark pods via IRSA."
-  value       = aws_iam_role.airflow_runtime.arn
+  value       = module.identity.airflow_runtime_role_arn
 }
 
 output "airflow_db_host" {
   description = "RDS hostname for Airflow."
-  value       = aws_db_instance.airflow.address
+  value       = module.database.host
 }
 
 output "airflow_db_port" {
   description = "RDS port for Airflow."
-  value       = aws_db_instance.airflow.port
+  value       = module.database.port
 }
 
 output "airflow_db_name" {
   description = "Database name for Airflow."
-  value       = aws_db_instance.airflow.db_name
+  value       = module.database.name
 }
 
 output "airflow_db_username" {
   description = "Database username for Airflow."
-  value       = aws_db_instance.airflow.username
+  value       = module.database.username
 }
 
 output "airflow_db_password" {
   description = "Database password for Airflow."
-  value       = local.airflow_db_password
+  value       = module.database.password
   sensitive   = true
 }

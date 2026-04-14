@@ -10,14 +10,14 @@ locals {
 resource "aws_security_group" "airflow_db" {
   name        = "${var.eks_cluster_name}-airflow-db"
   description = "Allow PostgreSQL from EKS nodes"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = var.vpc_id
 
   ingress {
     description     = "PostgreSQL from EKS worker nodes"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [module.eks.node_security_group_id, module.eks.cluster_primary_security_group_id]
+    security_groups = [var.node_security_group_id, var.cluster_primary_security_group_id]
   }
 
   egress {
@@ -38,7 +38,7 @@ resource "aws_security_group" "airflow_db" {
 
 resource "aws_db_subnet_group" "airflow" {
   name       = "${var.eks_cluster_name}-airflow"
-  subnet_ids = module.vpc.private_subnets
+  subnet_ids = var.private_subnets
 
   tags = merge(
     var.tags,

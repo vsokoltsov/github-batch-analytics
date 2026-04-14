@@ -1,0 +1,9 @@
+variable "athena_query_results_bucket_name" { type = string }
+variable "athena_database_name" { type = string }
+variable "athena_workgroup_name" { type = string }
+variable "athena_enforce_workgroup_configuration" { type = bool }
+variable "athena_partition_projection_start_date" { type = string }
+variable "athena_repository_table_name" { type = string }
+variable "athena_organization_table_name" { type = string }
+variable "marts_bucket_name" { type = string }
+variable "tags" { type = map(string) }

@@ -1,0 +1,13 @@
+output "landing_zone_bucket_name" { value = aws_s3_bucket.landing_zone.bucket }
+output "landing_zone_bucket_arn" { value = aws_s3_bucket.landing_zone.arn }
+output "bronze_zone_bucket_name" { value = aws_s3_bucket.bronze_zone.bucket }
+output "bronze_zone_bucket_arn" { value = aws_s3_bucket.bronze_zone.arn }
+output "silver_zone_bucket_name" { value = aws_s3_bucket.silver_zone.bucket }
+output "silver_zone_bucket_arn" { value = aws_s3_bucket.silver_zone.arn }
+output "marts_bucket_name" { value = aws_s3_bucket.marts.bucket }
+output "marts_bucket_arn" { value = aws_s3_bucket.marts.arn }
+output "dlt_state_bucket_name" { value = aws_s3_bucket.dlt_state.bucket }
+output "dlt_state_bucket_arn" { value = aws_s3_bucket.dlt_state.arn }
+output "logging_bucket_name" { value = aws_s3_bucket.logging.bucket }
+output "logging_bucket_arn" { value = aws_s3_bucket.logging.arn }
+output "dlt_state_bucket_access_policy_arn" { value = aws_iam_policy.dlt_state_bucket_access.arn }

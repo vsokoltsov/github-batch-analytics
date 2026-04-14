@@ -1,0 +1,9 @@
+variable "landing_zone_bucket_name" { type = string }
+variable "bronze_zone_bucket_name" { type = string }
+variable "silver_zone_bucket_name" { type = string }
+variable "marts_bucket_name" { type = string }
+variable "dlt_state_bucket_name" { type = string }
+variable "logging_bucket_name" { type = string }
+variable "dlt_state_access_role_names" { type = list(string) }
+variable "dlt_state_access_principal_arns" { type = list(string) }
+variable "tags" { type = map(string) }
