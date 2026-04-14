@@ -7,6 +7,7 @@ services:
     restart: unless-stopped
 
   airflow-init:
+    image: gba-airflow:local
     build:
       context: .
       dockerfile: Dockerfile
@@ -41,6 +42,7 @@ services:
     restart: "no"
 
   airflow-api-server:
+    image: gba-airflow:local
     build:
       context: .
       dockerfile: Dockerfile
@@ -76,6 +78,7 @@ services:
     restart: unless-stopped
 
   airflow-scheduler:
+    image: gba-airflow:local
     build:
       context: .
       dockerfile: Dockerfile
@@ -112,6 +115,7 @@ services:
     restart: unless-stopped
   
   airflow-dag-processor:
+    image: gba-airflow:local
     build:
       context: .
       dockerfile: Dockerfile
