@@ -28,6 +28,9 @@ COPY --from=deps /app/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 RUN pip install --no-cache-dir apache-airflow-providers-apache-spark
 
+# Include the repository DAGs inside the Airflow image so the scheduler sees them.
+COPY dags/ /opt/airflow/dags/
+
 # Pre-fetch Spark AWS jars into Ivy cache during image build to avoid
 # downloading them at task runtime.
 RUN mkdir -p /home/airflow/.ivy2 \
