@@ -52,10 +52,10 @@ def _normalize_candidate_value(value: object) -> object:
 )
 def org_candidates_resource(candidate_path: str) -> Iterator[dict]:
     candidates = pd.read_parquet(to_s3(candidate_path))
-    rows = candidates.to_dict(orient="records")
-    total = len(rows)
+    total = len(candidates)
+    columns = list(candidates.columns)
 
-    for idx, row in enumerate(rows, start=1):
+    for idx, row in enumerate(candidates.itertuples(index=False, name=None), start=1):
         if idx == 1 or idx % 25 == 0 or idx == total:
             logger.info(
                 "Organization enrichment progress: %d/%d processed, %d remaining",
@@ -63,7 +63,10 @@ def org_candidates_resource(candidate_path: str) -> Iterator[dict]:
                 total,
                 total - idx,
             )
-        yield {key: _normalize_candidate_value(value) for key, value in row.items()}
+        yield {
+            key: _normalize_candidate_value(value)
+            for key, value in zip(columns, row, strict=True)
+        }
 
 
 @dlt.transformer(
