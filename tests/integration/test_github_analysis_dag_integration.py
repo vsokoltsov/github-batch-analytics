@@ -56,7 +56,7 @@ class TestGithubAnalysisDag:
     def test_dag_basic_metadata(self, dag):
         assert dag is not None
         assert dag.dag_id == DAG_ID
-        assert dag.schedule is None
+        assert dag.schedule == "5 * * * *"
         assert dag.catchup is False
         assert set(dag.tags) == {"github", "batch", "spark"}
 
