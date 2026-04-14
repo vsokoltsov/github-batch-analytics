@@ -10,6 +10,12 @@ resource "github_actions_secret" "github_enrichment_token" {
   plaintext_value = var.github_token
 }
 
+resource "github_actions_secret" "terraform_github_token" {
+  repository      = var.github_repository
+  secret_name     = "TERRAFORM_GITHUB_TOKEN"
+  plaintext_value = var.github_token
+}
+
 resource "github_actions_variable" "aws_region" {
   repository    = var.github_repository
   variable_name = "AWS_REGION"

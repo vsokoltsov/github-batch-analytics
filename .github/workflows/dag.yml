@@ -1,8 +1,14 @@
-name: CI
+name: DAG
 
 on:
   push:
+    paths:
+      - "dags/**"
+      - "tests/**"
   pull_request:
+    paths:
+      - "dags/**"
+      - "tests/**"
 
 jobs:
   lint:
