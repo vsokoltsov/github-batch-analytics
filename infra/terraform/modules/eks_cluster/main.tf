@@ -20,6 +20,17 @@ module "eks" {
   eks_managed_node_group_defaults = {
     ami_type       = "AL2_x86_64"
     instance_types = [var.eks_node_instance_type]
+    block_device_mappings = {
+      xvda = {
+        device_name = "/dev/xvda"
+        ebs = {
+          volume_size           = var.eks_node_disk_size
+          volume_type           = "gp3"
+          delete_on_termination = true
+          encrypted             = true
+        }
+      }
+    }
   }
 
   eks_managed_node_groups = {

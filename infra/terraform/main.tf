@@ -14,6 +14,7 @@ module "eks_cluster" {
   vpc_id                 = module.network.vpc_id
   subnet_ids             = module.network.private_subnets
   eks_node_instance_type = var.eks_node_instance_type
+  eks_node_disk_size     = var.eks_node_disk_size
   eks_node_desired_size  = var.eks_node_desired_size
   eks_node_min_size      = var.eks_node_min_size
   eks_node_max_size      = var.eks_node_max_size

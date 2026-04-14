@@ -3,6 +3,7 @@ variable "eks_cluster_version" { type = string }
 variable "vpc_id" { type = string }
 variable "subnet_ids" { type = list(string) }
 variable "eks_node_instance_type" { type = string }
+variable "eks_node_disk_size" { type = number }
 variable "eks_node_desired_size" { type = number }
 variable "eks_node_min_size" { type = number }
 variable "eks_node_max_size" { type = number }

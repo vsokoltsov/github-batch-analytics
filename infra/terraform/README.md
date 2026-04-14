@@ -2,7 +2,7 @@
 
 ## Remote State
 
-This Terraform configuration supports remote state in S3 via [backend.tf](/Users/vadim.sokoltsov/learning/github-batch-analytics/infra/terraform/backend.tf).
+This Terraform configuration supports remote state in S3 via [backend.tf](./infra/terraform/backend.tf).
 
 Use a dedicated S3 bucket for Terraform state. Do not manage that bucket from this same Terraform state, otherwise you create a bootstrap cycle.
 

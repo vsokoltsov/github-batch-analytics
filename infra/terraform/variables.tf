@@ -166,6 +166,12 @@ variable "eks_node_instance_type" {
   default     = "t3.large"
 }
 
+variable "eks_node_disk_size" {
+  description = "Root disk size in GiB for the default EKS managed node group."
+  type        = number
+  default     = 150
+}
+
 variable "eks_node_desired_size" {
   description = "Desired node count for the default EKS managed node group."
   type        = number
