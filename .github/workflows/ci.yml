@@ -105,7 +105,7 @@ jobs:
           docker buildx build \
             --platform linux/amd64 \
             --push \
-            -t "$REGISTRY/$ECR_REPOSITORY:${GITHUB_SHA}" \
+            -t "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}" \
             .
 
   deploy:
