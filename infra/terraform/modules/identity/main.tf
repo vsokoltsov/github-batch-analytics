@@ -155,6 +155,27 @@ data "aws_iam_policy_document" "github_actions_eks_access" {
   }
 }
 
+data "aws_iam_policy_document" "github_actions_terraform_state_access" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetBucketLocation",
+      "s3:ListBucket",
+    ]
+    resources = [var.terraform_state_bucket_arn]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:DeleteObject",
+      "s3:GetObject",
+      "s3:PutObject",
+    ]
+    resources = ["${var.terraform_state_bucket_arn}/*"]
+  }
+}
+
 resource "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
 
@@ -193,6 +214,13 @@ resource "aws_iam_policy" "github_actions_eks_access" {
   tags = var.tags
 }
 
+resource "aws_iam_policy" "github_actions_terraform_state_access" {
+  name   = "${var.github_actions_role_name}-terraform-state-access"
+  policy = data.aws_iam_policy_document.github_actions_terraform_state_access.json
+
+  tags = var.tags
+}
+
 resource "aws_iam_role_policy_attachment" "github_actions_ecr_push" {
   role       = aws_iam_role.github_actions.name
   policy_arn = aws_iam_policy.github_actions_ecr_push.arn
@@ -201,6 +229,11 @@ resource "aws_iam_role_policy_attachment" "github_actions_ecr_push" {
 resource "aws_iam_role_policy_attachment" "github_actions_eks_access" {
   role       = aws_iam_role.github_actions.name
   policy_arn = aws_iam_policy.github_actions_eks_access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_terraform_state_access" {
+  role       = aws_iam_role.github_actions.name
+  policy_arn = aws_iam_policy.github_actions_terraform_state_access.arn
 }
 
 resource "aws_eks_access_entry" "github_actions" {

@@ -94,6 +94,7 @@ module "identity" {
   dlt_state_bucket_arn            = module.storage.dlt_state_bucket_arn
   athena_query_results_bucket_arn = module.catalog.athena_query_results_bucket_arn
   logging_bucket_arn              = module.storage.logging_bucket_arn
+  terraform_state_bucket_arn      = "arn:aws:s3:::${var.terraform_state_bucket_name}"
   tags                            = var.tags
 }
 
@@ -120,4 +121,5 @@ module "github_repo" {
   marts_bucket_name               = module.storage.marts_bucket_name
   dlt_state_bucket_name           = module.storage.dlt_state_bucket_name
   logging_bucket_name             = module.storage.logging_bucket_name
+  terraform_state_bucket_name     = var.terraform_state_bucket_name
 }

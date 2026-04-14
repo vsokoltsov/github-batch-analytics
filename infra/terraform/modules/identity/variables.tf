@@ -17,4 +17,5 @@ variable "marts_bucket_arn" { type = string }
 variable "dlt_state_bucket_arn" { type = string }
 variable "athena_query_results_bucket_arn" { type = string }
 variable "logging_bucket_arn" { type = string }
+variable "terraform_state_bucket_arn" { type = string }
 variable "tags" { type = map(string) }

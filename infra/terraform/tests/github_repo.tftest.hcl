@@ -26,6 +26,7 @@ run "plan_github_repo_module" {
     marts_bucket_name               = "marts-bucket"
     dlt_state_bucket_name           = "dlt-state-bucket"
     logging_bucket_name             = "logging-bucket"
+    terraform_state_bucket_name     = "terraform-state-bucket"
   }
 
   assert {
@@ -41,5 +42,10 @@ run "plan_github_repo_module" {
   assert {
     condition     = github_actions_variable.logging_bucket_name.variable_name == "LOGGING_BUCKET_NAME"
     error_message = "Logging bucket GitHub variable should keep the expected variable name."
+  }
+
+  assert {
+    condition     = github_actions_variable.terraform_state_bucket_name.value == "terraform-state-bucket"
+    error_message = "Terraform state bucket GitHub variable should match the configured bucket name."
   }
 }

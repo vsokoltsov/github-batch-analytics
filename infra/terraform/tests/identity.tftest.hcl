@@ -72,6 +72,7 @@ run "plan_identity_module" {
     dlt_state_bucket_arn            = "arn:aws:s3:::dlt-state-bucket"
     athena_query_results_bucket_arn = "arn:aws:s3:::athena-results-bucket"
     logging_bucket_arn              = "arn:aws:s3:::logging-bucket"
+    terraform_state_bucket_arn      = "arn:aws:s3:::terraform-state-bucket"
     tags = {
       Environment = "test"
       ManagedBy   = "terraform"
@@ -96,5 +97,10 @@ run "plan_identity_module" {
   assert {
     condition     = aws_eks_access_entry.github_actions.cluster_name == "github-batch-analytics"
     error_message = "GitHub Actions EKS access entry should target the configured cluster."
+  }
+
+  assert {
+    condition     = aws_iam_policy.github_actions_terraform_state_access.name == "github-actions-ecr-push-terraform-state-access"
+    error_message = "GitHub Actions role should receive a dedicated Terraform state access policy."
   }
 }

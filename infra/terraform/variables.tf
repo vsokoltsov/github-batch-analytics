@@ -63,6 +63,12 @@ variable "athena_query_results_bucket_name" {
   type        = string
 }
 
+variable "terraform_state_bucket_name" {
+  description = "S3 bucket name used for the Terraform remote state backend."
+  type        = string
+  default     = "gba-terraform-state-prod"
+}
+
 variable "athena_enforce_workgroup_configuration" {
   description = "Whether Athena should enforce workgroup-level settings."
   type        = bool

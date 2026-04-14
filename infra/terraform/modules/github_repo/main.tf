@@ -117,3 +117,9 @@ resource "github_actions_variable" "logging_bucket_name" {
   variable_name = "LOGGING_BUCKET_NAME"
   value         = var.logging_bucket_name
 }
+
+resource "github_actions_variable" "terraform_state_bucket_name" {
+  repository    = var.github_repository
+  variable_name = "TERRAFORM_STATE_BUCKET"
+  value         = var.terraform_state_bucket_name
+}
