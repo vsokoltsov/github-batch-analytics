@@ -3,6 +3,16 @@ output "landing_zone_bucket_name" {
   value       = aws_s3_bucket.landing_zone.bucket
 }
 
+output "aws_region" {
+  description = "AWS region used for this stack."
+  value       = var.aws_region
+}
+
+output "aws_profile" {
+  description = "AWS profile used for this stack."
+  value       = var.aws_profile
+}
+
 output "landing_zone_bucket_arn" {
   description = "S3 bucket ARN for landing zone."
   value       = aws_s3_bucket.landing_zone.arn
@@ -46,6 +56,11 @@ output "dlt_state_bucket_name" {
 output "dlt_state_bucket_arn" {
   description = "S3 bucket ARN for dlt pipeline state."
   value       = aws_s3_bucket.dlt_state.arn
+}
+
+output "logging_bucket_name" {
+  description = "S3 bucket name for Airflow remote logs."
+  value       = aws_s3_bucket.logging.bucket
 }
 
 output "dlt_state_bucket_access_policy_arn" {
@@ -101,4 +116,60 @@ output "athena_dashboard_table_names" {
 output "github_actions_role_arn" {
   description = "IAM role ARN that GitHub Actions assumes via OIDC."
   value       = aws_iam_role.github_actions.arn
+}
+
+output "eks_cluster_name" {
+  description = "EKS cluster name."
+  value       = module.eks.cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  description = "EKS cluster API endpoint."
+  value       = module.eks.cluster_endpoint
+}
+
+output "eks_cluster_oidc_issuer_url" {
+  description = "OIDC issuer URL for the EKS cluster."
+  value       = module.eks.cluster_oidc_issuer_url
+}
+
+output "kubernetes_namespace" {
+  description = "Kubernetes namespace used for the application."
+  value       = var.kubernetes_namespace
+}
+
+output "kubernetes_service_account_name" {
+  description = "Service account name used for the application."
+  value       = var.kubernetes_service_account_name
+}
+
+output "airflow_runtime_role_arn" {
+  description = "IAM role ARN used by Airflow and Spark pods via IRSA."
+  value       = aws_iam_role.airflow_runtime.arn
+}
+
+output "airflow_db_host" {
+  description = "RDS hostname for Airflow."
+  value       = aws_db_instance.airflow.address
+}
+
+output "airflow_db_port" {
+  description = "RDS port for Airflow."
+  value       = aws_db_instance.airflow.port
+}
+
+output "airflow_db_name" {
+  description = "Database name for Airflow."
+  value       = aws_db_instance.airflow.db_name
+}
+
+output "airflow_db_username" {
+  description = "Database username for Airflow."
+  value       = aws_db_instance.airflow.username
+}
+
+output "airflow_db_password" {
+  description = "Database password for Airflow."
+  value       = local.airflow_db_password
+  sensitive   = true
 }

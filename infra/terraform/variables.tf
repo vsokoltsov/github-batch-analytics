@@ -35,6 +35,11 @@ variable "dlt_state_bucket_name" {
   type        = string
 }
 
+variable "logging_bucket_name" {
+  description = "S3 bucket for Airflow remote logs."
+  type        = string
+}
+
 variable "ecr_repository_name" {
   description = "ECR repository name for Airflow image artifacts."
   type        = string
@@ -129,6 +134,103 @@ variable "dlt_state_access_principal_arns" {
   description = "IAM principal ARNs that should be allowed in the dlt state bucket policy."
   type        = list(string)
   default     = []
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for the EKS VPC."
+  type        = string
+  default     = "10.42.0.0/16"
+}
+
+variable "eks_cluster_name" {
+  description = "EKS cluster name."
+  type        = string
+  default     = "github-batch-analytics"
+}
+
+variable "eks_cluster_version" {
+  description = "EKS Kubernetes version."
+  type        = string
+  default     = "1.31"
+}
+
+variable "eks_node_instance_type" {
+  description = "Instance type for the default EKS managed node group."
+  type        = string
+  default     = "t3.large"
+}
+
+variable "eks_node_desired_size" {
+  description = "Desired node count for the default EKS managed node group."
+  type        = number
+  default     = 2
+}
+
+variable "eks_node_min_size" {
+  description = "Minimum node count for the default EKS managed node group."
+  type        = number
+  default     = 1
+}
+
+variable "eks_node_max_size" {
+  description = "Maximum node count for the default EKS managed node group."
+  type        = number
+  default     = 3
+}
+
+variable "kubernetes_namespace" {
+  description = "Kubernetes namespace used for the Airflow deployment."
+  type        = string
+  default     = "github-batch-analytics"
+}
+
+variable "kubernetes_service_account_name" {
+  description = "Kubernetes service account name used by Airflow and Spark pods."
+  type        = string
+  default     = "github-batch-analytics"
+}
+
+variable "airflow_runtime_iam_role_name" {
+  description = "IAM role name used for IRSA by Airflow and Spark pods."
+  type        = string
+  default     = "github-batch-analytics-airflow-runtime"
+}
+
+variable "airflow_db_name" {
+  description = "PostgreSQL database name for Airflow."
+  type        = string
+  default     = "airflow"
+}
+
+variable "airflow_db_username" {
+  description = "PostgreSQL username for Airflow."
+  type        = string
+  default     = "airflow"
+}
+
+variable "airflow_db_password" {
+  description = "Optional PostgreSQL password for Airflow. When null, Terraform generates one."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "airflow_db_instance_class" {
+  description = "RDS instance class for Airflow PostgreSQL."
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "airflow_db_allocated_storage" {
+  description = "Allocated storage in GiB for Airflow PostgreSQL."
+  type        = number
+  default     = 20
+}
+
+variable "airflow_db_max_allocated_storage" {
+  description = "Maximum autoscaled storage in GiB for Airflow PostgreSQL."
+  type        = number
+  default     = 100
 }
 
 variable "tags" {
