@@ -112,4 +112,9 @@ run "plan_identity_module" {
     condition     = aws_iam_policy.github_actions_terraform_state_access.name == "github-actions-ecr-push-terraform-state-access"
     error_message = "GitHub Actions role should receive a dedicated Terraform state access policy."
   }
+
+  assert {
+    condition     = aws_iam_role_policy_attachment.github_actions_read_only_access.policy_arn == "arn:aws:iam::aws:policy/ReadOnlyAccess"
+    error_message = "GitHub Actions role should have AWS ReadOnlyAccess for terraform plan refreshes."
+  }
 }

@@ -236,6 +236,11 @@ resource "aws_iam_role_policy_attachment" "github_actions_terraform_state_access
   policy_arn = aws_iam_policy.github_actions_terraform_state_access.arn
 }
 
+resource "aws_iam_role_policy_attachment" "github_actions_read_only_access" {
+  role       = aws_iam_role.github_actions.name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
+
 resource "aws_eks_access_entry" "github_actions" {
   cluster_name  = var.eks_cluster_name
   principal_arn = aws_iam_role.github_actions.arn
