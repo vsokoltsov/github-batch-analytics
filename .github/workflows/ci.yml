@@ -108,3 +108,94 @@ jobs:
           push: true
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'eu-central-1' }}
+      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'github-batch-analytics-airflow' }}
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || 'github-batch-analytics' }}
+      KUBERNETES_NAMESPACE: ${{ vars.KUBERNETES_NAMESPACE || 'github-batch-analytics' }}
+      KUBERNETES_SERVICE_ACCOUNT_NAME: ${{ vars.KUBERNETES_SERVICE_ACCOUNT_NAME || 'github-batch-analytics' }}
+      AIRFLOW_RUNTIME_ROLE_ARN: ${{ vars.AIRFLOW_RUNTIME_ROLE_ARN }}
+      AIRFLOW_DB_HOST: ${{ vars.AIRFLOW_DB_HOST }}
+      AIRFLOW_DB_PORT: ${{ vars.AIRFLOW_DB_PORT || '5432' }}
+      AIRFLOW_DB_NAME: ${{ vars.AIRFLOW_DB_NAME || 'airflow' }}
+      AIRFLOW_DB_USERNAME: ${{ vars.AIRFLOW_DB_USERNAME || 'airflow' }}
+      LANDING_ZONE_BUCKET_NAME: ${{ vars.LANDING_ZONE_BUCKET_NAME }}
+      BRONZE_ZONE_BUCKET_NAME: ${{ vars.BRONZE_ZONE_BUCKET_NAME }}
+      SILVER_ZONE_BUCKET_NAME: ${{ vars.SILVER_ZONE_BUCKET_NAME }}
+      MARTS_BUCKET_NAME: ${{ vars.MARTS_BUCKET_NAME }}
+      DLT_STATE_BUCKET_NAME: ${{ vars.DLT_STATE_BUCKET_NAME }}
+      LOGGING_BUCKET_NAME: ${{ vars.LOGGING_BUCKET_NAME }}
+      AIRFLOW_DB_PASSWORD: ${{ secrets.AIRFLOW_DB_PASSWORD }}
+      GITHUB_ENRICHMENT_TOKEN: ${{ secrets.ENRICHMENT_GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region "$AWS_REGION" --name "$EKS_CLUSTER_NAME"
+
+      - name: Deploy application
+        run: |
+          RELEASE_NAME=github-batch-analytics
+          IMAGE_REPOSITORY="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}"
+
+          if kubectl -n "$KUBERNETES_NAMESPACE" get deployment/${RELEASE_NAME}-airflow-scheduler >/dev/null 2>&1; then
+            kubectl -n "$KUBERNETES_NAMESPACE" delete deployment/${RELEASE_NAME}-airflow-scheduler --wait=true
+          fi
+
+          if kubectl -n "$KUBERNETES_NAMESPACE" get job/${RELEASE_NAME}-airflow-init >/dev/null 2>&1; then
+            kubectl -n "$KUBERNETES_NAMESPACE" delete job/${RELEASE_NAME}-airflow-init --wait=true
+          fi
+
+          helm upgrade --install "$RELEASE_NAME" ./infra/helm/github-batch-analytics \
+            --namespace "$KUBERNETES_NAMESPACE" \
+            --create-namespace \
+            --set image.repository="$IMAGE_REPOSITORY" \
+            --set image.tag="${{ github.sha }}" \
+            --set aws.region="$AWS_REGION" \
+            --set serviceAccount.name="$KUBERNETES_SERVICE_ACCOUNT_NAME" \
+            --set-string serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn="$AIRFLOW_RUNTIME_ROLE_ARN" \
+            --set airflow.database.host="$AIRFLOW_DB_HOST" \
+            --set airflow.database.port="$AIRFLOW_DB_PORT" \
+            --set airflow.database.name="$AIRFLOW_DB_NAME" \
+            --set airflow.database.username="$AIRFLOW_DB_USERNAME" \
+            --set-string airflow.database.password="$AIRFLOW_DB_PASSWORD" \
+            --set airflow.buckets.landingZone="$LANDING_ZONE_BUCKET_NAME" \
+            --set airflow.buckets.bronzeZone="$BRONZE_ZONE_BUCKET_NAME" \
+            --set airflow.buckets.silverZone="$SILVER_ZONE_BUCKET_NAME" \
+            --set airflow.buckets.marts="$MARTS_BUCKET_NAME" \
+            --set airflow.buckets.dltState="$DLT_STATE_BUCKET_NAME" \
+            --set airflow.buckets.logging="$LOGGING_BUCKET_NAME" \
+            --set-string airflow.dlt.githubToken="$GITHUB_ENRICHMENT_TOKEN"
+
+          kubectl -n "$KUBERNETES_NAMESPACE" wait --for=condition=complete "job/${RELEASE_NAME}-airflow-init" --timeout=10m
+          kubectl -n "$KUBERNETES_NAMESPACE" rollout status "deployment/${RELEASE_NAME}-airflow-api-server" --timeout=10m
+          kubectl -n "$KUBERNETES_NAMESPACE" rollout status "deployment/${RELEASE_NAME}-airflow-scheduler" --timeout=10m
+          kubectl -n "$KUBERNETES_NAMESPACE" rollout status "deployment/${RELEASE_NAME}-airflow-dag-processor" --timeout=10m
+          kubectl -n "$KUBERNETES_NAMESPACE" rollout status "deployment/${RELEASE_NAME}-spark-master" --timeout=10m
+          kubectl -n "$KUBERNETES_NAMESPACE" rollout status "deployment/${RELEASE_NAME}-spark-worker" --timeout=10m
