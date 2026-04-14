@@ -3,8 +3,8 @@ mock_provider "aws" {}
 override_data {
   target = data.aws_iam_policy_document.dlt_state_bucket_policy
   values = {
-    id = "mock-dlt-state-bucket-policy"
-    json = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"arn:aws:iam::123456789012:role/github-actions\",\"arn:aws:iam::123456789012:role/airflow-runtime\"]},\"Action\":[\"s3:GetObject\"],\"Resource\":[\"arn:aws:s3:::dlt-state-bucket/*\"]}]}"
+    id            = "mock-dlt-state-bucket-policy"
+    json          = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"arn:aws:iam::123456789012:role/github-actions\",\"arn:aws:iam::123456789012:role/airflow-runtime\"]},\"Action\":[\"s3:GetObject\"],\"Resource\":[\"arn:aws:s3:::dlt-state-bucket/*\"]}]}"
     minified_json = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"arn:aws:iam::123456789012:role/github-actions\",\"arn:aws:iam::123456789012:role/airflow-runtime\"]},\"Action\":[\"s3:GetObject\"],\"Resource\":[\"arn:aws:s3:::dlt-state-bucket/*\"]}]}"
   }
 }

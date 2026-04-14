@@ -12,8 +12,8 @@ override_data {
 override_data {
   target = data.aws_iam_policy_document.airflow_runtime
   values = {
-    id = "mock-airflow-runtime-policy"
-    json = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"s3:GetBucketLocation\"],\"Resource\":[\"arn:aws:s3:::athena-results-bucket\"]}]}"
+    id            = "mock-airflow-runtime-policy"
+    json          = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"s3:GetBucketLocation\"],\"Resource\":[\"arn:aws:s3:::athena-results-bucket\"]}]}"
     minified_json = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"s3:GetBucketLocation\"],\"Resource\":[\"arn:aws:s3:::athena-results-bucket\"]}]}"
   }
 }
