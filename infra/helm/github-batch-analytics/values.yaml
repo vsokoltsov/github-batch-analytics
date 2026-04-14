@@ -1,0 +1,99 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: ""
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  name: github-batch-analytics
+  annotations: {}
+  roleArn: ""
+
+aws:
+  region: eu-central-1
+
+airflow:
+  webService:
+    type: LoadBalancer
+    port: 8080
+    annotations: {}
+  initJob:
+    backoffLimit: 6
+  secrets:
+    apiJwtSecret: change-me-jwt-secret
+    internalApiSecretKey: change-me-internal-secret
+    apiSecretKey: change-me-api-secret
+  database:
+    host: ""
+    port: 5432
+    name: airflow
+    username: airflow
+    password: ""
+  buckets:
+    landingZone: ""
+    bronzeZone: ""
+    silverZone: ""
+    marts: ""
+    dltState: ""
+    logging: ""
+  candidatesSize: 25
+  dlt:
+    githubToken: ""
+  resources:
+    apiServer:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    scheduler:
+      requests:
+        cpu: "1"
+        memory: 2Gi
+      limits:
+        cpu: "2"
+        memory: 4Gi
+    dagProcessor:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+
+spark:
+  master:
+    image:
+      repository: "apache/spark"
+      tag: "3.5.4-scala2.12-java17-python3-ubuntu"
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "2"
+        memory: 2Gi
+  worker:
+    replicas: 1
+    image:
+      repository: "apache/spark"
+      tag: "3.5.4-scala2.12-java17-python3-ubuntu"
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: "2"
+        memory: 4Gi
+  job:
+    coresMax: 2
+    executorCores: 1
+    executorMemory: 1g

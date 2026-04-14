@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "github-batch-analytics.fullname" . }}-env
+  labels:
+    {{- include "github-batch-analytics.labels" . | nindent 4 }}
+data:
+  AIRFLOW__CORE__EXECUTOR: "LocalExecutor"
+  AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+  AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "true"
+  AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://{{ include "github-batch-analytics.fullname" . }}-airflow-api-server:8080/execution/'
+  AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: "10"
+  AIRFLOW__DAG_PROCESSOR__MIN_FILE_PROCESS_INTERVAL: "5"
+  AIRFLOW__CORE__PARALLELISM: "8"
+  AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: "8"
+  AIRFLOW__CORE__MAX_ACTIVE_RUNS_PER_DAG: "1"
+  AIRFLOW__SCHEDULER__MAX_TIS_PER_QUERY: "16"
+  S3_LANDING_ZONE_BUCKET_NAME: {{ .Values.airflow.buckets.landingZone | quote }}
+  S3_BRONZE_ZONE_BUCKET_NAME: {{ .Values.airflow.buckets.bronzeZone | quote }}
+  S3_SILVER_ZONE_BUCKET_NAME: {{ .Values.airflow.buckets.silverZone | quote }}
+  S3_MARTS_BUCKET_NAME: {{ .Values.airflow.buckets.marts | quote }}
+  S3_DLT_STATE_BUCKET_NAME: {{ .Values.airflow.buckets.dltState | quote }}
+  CANDIDATES_SIZE: {{ .Values.airflow.candidatesSize | quote }}
+  SPARK_MASTER_URL: 'spark://{{ include "github-batch-analytics.fullname" . }}-spark-master:7077'
+  SPARK_CORES_MAX: {{ .Values.spark.job.coresMax | quote }}
+  SPARK_EXECUTOR_CORES: {{ .Values.spark.job.executorCores | quote }}
+  SPARK_EXECUTOR_MEMORY: {{ .Values.spark.job.executorMemory | quote }}
+  AWS_REGION: {{ .Values.aws.region | quote }}
+  AIRFLOW_CONN_AWS_DEFAULT: "aws://"
+  AIRFLOW_CONN_SPARK_DEFAULT: 'spark://{{ include "github-batch-analytics.fullname" . }}-spark-master:7077'
+  AIRFLOW__LOGGING__REMOTE_LOGGING: "True"
+  AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID: "aws_default"
+  AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER: {{ printf "s3://%s/logs" .Values.airflow.buckets.logging | quote }}
+  DLT_DATA_DIR: "/tmp/dlt"
+  DLT_TELEMETRY: "false"
+  RUNTIME__DLTHUB_TELEMETRY: "false"
+  ENABLE_RUNTIME_TRACE: "false"
+  PYTHONPATH: "/opt/airflow/dags"

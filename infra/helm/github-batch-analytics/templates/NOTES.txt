@@ -1,0 +1,7 @@
+1. Get the Airflow service address:
+   kubectl -n {{ .Release.Namespace }} get svc {{ include "github-batch-analytics.fullname" . }}-airflow-api-server
+
+2. Open the Airflow UI on port {{ .Values.airflow.webService.port }}.
+
+3. Run a smoke test:
+   kubectl -n {{ .Release.Namespace }} exec deploy/{{ include "github-batch-analytics.fullname" . }}-airflow-scheduler -- airflow dags test github_batch_analysis 2026-04-08

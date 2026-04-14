@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "github-batch-analytics.fullname" . }}-airflow-init
+  labels:
+    {{- include "github-batch-analytics.labels" . | nindent 4 }}
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+spec:
+  backoffLimit: {{ .Values.airflow.initJob.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "github-batch-analytics.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "github-batch-analytics.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: airflow-init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/bash", "-lc", "exec airflow db migrate"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "github-batch-analytics.fullname" . }}-env
+            - secretRef:
+                name: {{ include "github-batch-analytics.fullname" . }}-secrets

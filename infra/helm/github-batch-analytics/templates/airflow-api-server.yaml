@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "github-batch-analytics.fullname" . }}-airflow-api-server
+  labels:
+    {{- include "github-batch-analytics.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: airflow-api-server
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "github-batch-analytics.labels" . | nindent 8 }}
+        app.kubernetes.io/component: airflow-api-server
+    spec:
+      serviceAccountName: {{ include "github-batch-analytics.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: airflow-api-server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/bash", "-lc", "exec airflow api-server"]
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: {{ include "github-batch-analytics.fullname" . }}-env
+            - secretRef:
+                name: {{ include "github-batch-analytics.fullname" . }}-secrets
+          volumeMounts:
+            - name: dlt-config
+              mountPath: /home/airflow/.dlt/config.toml
+              subPath: config.toml
+            - name: dlt-secrets
+              mountPath: /home/airflow/.dlt/secrets.toml
+              subPath: secrets.toml
+            - name: dlt-pipelines
+              mountPath: /tmp/dlt
+          resources:
+            {{- toYaml .Values.airflow.resources.apiServer | nindent 12 }}
+      volumes:
+        - name: dlt-config
+          configMap:
+            name: {{ include "github-batch-analytics.fullname" . }}-dlt-config
+        - name: dlt-secrets
+          secret:
+            secretName: {{ include "github-batch-analytics.fullname" . }}-dlt-secrets
+        - name: dlt-pipelines
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "github-batch-analytics.fullname" . }}-airflow-api-server
+  labels:
+    {{- include "github-batch-analytics.labels" . | nindent 4 }}
+  {{- with .Values.airflow.webService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.airflow.webService.type }}
+  selector:
+    app.kubernetes.io/component: airflow-api-server
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: {{ .Values.airflow.webService.port }}
+      targetPort: http

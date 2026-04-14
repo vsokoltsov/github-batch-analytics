@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "github-batch-analytics.fullname" . }}-spark-worker
+  labels:
+    {{- include "github-batch-analytics.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.spark.worker.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: spark-worker
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "github-batch-analytics.labels" . | nindent 8 }}
+        app.kubernetes.io/component: spark-worker
+    spec:
+      serviceAccountName: {{ include "github-batch-analytics.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: spark-worker
+          image: "{{ .Values.spark.worker.image.repository }}:{{ .Values.spark.worker.image.tag }}"
+          imagePullPolicy: {{ .Values.spark.worker.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -lc
+            - exec /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://{{ include "github-batch-analytics.fullname" . }}-spark-master:7077
+          envFrom:
+            - configMapRef:
+                name: {{ include "github-batch-analytics.fullname" . }}-env
+            - secretRef:
+                name: {{ include "github-batch-analytics.fullname" . }}-secrets
+          resources:
+            {{- toYaml .Values.spark.worker.resources | nindent 12 }}

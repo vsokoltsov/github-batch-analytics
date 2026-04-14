@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "github-batch-analytics.fullname" . }}-spark-master
+  labels:
+    {{- include "github-batch-analytics.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: spark-master
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "github-batch-analytics.labels" . | nindent 8 }}
+        app.kubernetes.io/component: spark-master
+    spec:
+      serviceAccountName: {{ include "github-batch-analytics.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: spark-master
+          image: "{{ .Values.spark.master.image.repository }}:{{ .Values.spark.master.image.tag }}"
+          imagePullPolicy: {{ .Values.spark.master.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -lc
+            - exec /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master --host 0.0.0.0 --port 7077 --webui-port 8080
+          ports:
+            - containerPort: 7077
+              name: spark
+            - containerPort: 8080
+              name: webui
+          envFrom:
+            - configMapRef:
+                name: {{ include "github-batch-analytics.fullname" . }}-env
+            - secretRef:
+                name: {{ include "github-batch-analytics.fullname" . }}-secrets
+          resources:
+            {{- toYaml .Values.spark.master.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "github-batch-analytics.fullname" . }}-spark-master
+  labels:
+    {{- include "github-batch-analytics.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/component: spark-master
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: spark
+      port: 7077
+      targetPort: spark
+    - name: webui
+      port: 8080
+      targetPort: webui
