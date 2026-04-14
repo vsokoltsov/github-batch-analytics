@@ -20,6 +20,7 @@ terraform.tfvars
 .envrc
 terraform.tfstate
 terraform.tfstate.backup
+infra/terraform/backend.hcl
 vendored/
 .ipynb_checkpoints
 .virtual_documents/

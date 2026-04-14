@@ -1,0 +1,5 @@
+bucket       = "REPLACE_WITH_TERRAFORM_STATE_BUCKET"
+key          = "github-batch-analytics/infra/terraform.tfstate"
+region       = "eu-central-1"
+profile      = "gba-admin"
+encrypt      = true
