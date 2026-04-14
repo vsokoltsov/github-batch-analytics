@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.sdk import TaskGroup
@@ -29,6 +29,12 @@ with DAG(
     schedule="5 * * * *",
     catchup=False,
     tags={"github", "batch", "spark"},
+    default_args={
+        "retries": 3,
+        "retry_delay": timedelta(minutes=1),
+        "retry_exponential_backoff": True,
+        "max_retry_delay": timedelta(minutes=15),
+    }
 ) as dag:
     download_step = get_github_events_archive(
         landing_date="{{ ds }}",

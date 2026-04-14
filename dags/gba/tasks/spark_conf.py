@@ -25,6 +25,7 @@ def build_spark_conf(
             "com.amazonaws.auth.DefaultAWSCredentialsProviderChain"
         ),
         "spark.executorEnv.PYTHONPATH": "/opt/airflow/dags",
+        "spark.task.maxFailures": 4.
     }
 
     if driver_host := os.getenv("AIRFLOW_POD_IP", ""):
