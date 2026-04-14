@@ -29,10 +29,22 @@ spec:
             - /bin/bash
             - -lc
             - exec /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://{{ include "github-batch-analytics.fullname" . }}-spark-master:7077
+          env:
+            - name: SPARK_WORKER_DIR
+              value: {{ .Values.spark.worker.workDir | quote }}
+            - name: SPARK_LOCAL_DIRS
+              value: {{ .Values.spark.worker.workDir | quote }}
           envFrom:
             - configMapRef:
                 name: {{ include "github-batch-analytics.fullname" . }}-env
             - secretRef:
                 name: {{ include "github-batch-analytics.fullname" . }}-secrets
+          volumeMounts:
+            - name: spark-work-dir
+              mountPath: {{ .Values.spark.worker.workDir | quote }}
           resources:
             {{- toYaml .Values.spark.worker.resources | nindent 12 }}
+      volumes:
+        - name: spark-work-dir
+          emptyDir:
+            sizeLimit: {{ .Values.spark.worker.workDirSizeLimit }}

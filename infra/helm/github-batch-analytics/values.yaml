@@ -69,6 +69,8 @@ airflow:
 
 spark:
   master:
+    workDir: /tmp/spark-work
+    workDirSizeLimit: 4Gi
     image:
       repository: "apache/spark"
       tag: "3.5.4-scala2.12-java17-python3-ubuntu"
@@ -76,12 +78,16 @@ spark:
     resources:
       requests:
         cpu: 250m
+        ephemeral-storage: 1Gi
         memory: 512Mi
       limits:
         cpu: "2"
+        ephemeral-storage: 4Gi
         memory: 2Gi
   worker:
     replicas: 1
+    workDir: /tmp/spark-work
+    workDirSizeLimit: 12Gi
     image:
       repository: "apache/spark"
       tag: "3.5.4-scala2.12-java17-python3-ubuntu"
@@ -89,9 +95,11 @@ spark:
     resources:
       requests:
         cpu: 500m
+        ephemeral-storage: 4Gi
         memory: 1Gi
       limits:
         cpu: "2"
+        ephemeral-storage: 12Gi
         memory: 4Gi
   job:
     coresMax: 2

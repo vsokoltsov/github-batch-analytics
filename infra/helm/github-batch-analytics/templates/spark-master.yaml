@@ -34,13 +34,25 @@ spec:
               name: spark
             - containerPort: 8080
               name: webui
+          env:
+            - name: SPARK_MASTER_OPTS
+              value: {{ printf "-Dspark.deploy.recoveryMode=NONE -Dspark.worker.cleanup.enabled=true -Dspark.worker.cleanup.interval=1800 -Dspark.worker.cleanup.appDataTtl=7200" | quote }}
+            - name: SPARK_LOCAL_DIRS
+              value: {{ .Values.spark.master.workDir | quote }}
           envFrom:
             - configMapRef:
                 name: {{ include "github-batch-analytics.fullname" . }}-env
             - secretRef:
                 name: {{ include "github-batch-analytics.fullname" . }}-secrets
+          volumeMounts:
+            - name: spark-work-dir
+              mountPath: {{ .Values.spark.master.workDir | quote }}
           resources:
             {{- toYaml .Values.spark.master.resources | nindent 12 }}
+      volumes:
+        - name: spark-work-dir
+          emptyDir:
+            sizeLimit: {{ .Values.spark.master.workDirSizeLimit }}
 ---
 apiVersion: v1
 kind: Service
