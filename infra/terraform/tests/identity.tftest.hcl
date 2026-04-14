@@ -45,6 +45,15 @@ override_data {
   }
 }
 
+override_data {
+  target = data.aws_iam_policy_document.github_actions_terraform_state_access
+  values = {
+    id            = "mock-github-actions-terraform-state-access"
+    json          = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
+    minified_json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
+  }
+}
+
 run "plan_identity_module" {
   command = plan
 
