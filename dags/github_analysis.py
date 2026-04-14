@@ -26,7 +26,7 @@ from gba.tasks.build_dashboard_views import (
 with DAG(
     dag_id="github_batch_analysis",
     start_date=datetime(2026, 1, 1),
-    schedule=None,
+    schedule="5 * * * *",
     catchup=False,
     tags={"github", "batch", "spark"},
 ) as dag:
