@@ -18,8 +18,13 @@ ENV PATH="${SPARK_HOME}/bin:${PATH}"
 RUN apt-get update \
   && apt-get install -y --no-install-recommends curl openjdk-17-jre-headless \
   && rm -rf /var/lib/apt/lists/* \
-  && curl -fsSL "https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz" \
-    | tar -xz -C /opt \
+  && echo "Downloading Spark ${SPARK_VERSION} distribution" \
+  && curl -fL --retry 5 --retry-all-errors --connect-timeout 30 \
+    "https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz" \
+    -o /tmp/spark.tgz \
+  && echo "Extracting Spark ${SPARK_VERSION} distribution" \
+  && tar -xzf /tmp/spark.tgz -C /opt \
+  && rm -f /tmp/spark.tgz \
   && ln -s "/opt/spark-${SPARK_VERSION}-bin-hadoop3" "${SPARK_HOME}"
 
 USER airflow
