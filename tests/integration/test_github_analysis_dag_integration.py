@@ -73,23 +73,11 @@ class TestGithubAnalysisDag:
             "build_repo_marts",
             "build_org_marts",
             "repository_dashboards.build_repo_dashboard_summary",
-            "repository_dashboards.build_repo_dashboard_event_type",
-            "repository_dashboards.build_repo_dashboard_fork",
-            "repository_dashboards.build_repo_dashboard_freshness",
             "repository_dashboards.build_repo_dashboard_language",
-            "repository_dashboards.build_repo_dashboard_owner",
-            "repository_dashboards.build_repo_dashboard_top_100",
-            "repository_dashboards.build_repo_dashboard_visibility",
             "organization_dashboards.build_org_dashboard_summary",
-            "organization_dashboards.build_org_dashboard_company",
-            "organization_dashboards.build_org_dashboard_location",
-            "organization_dashboards.build_org_dashboard_size",
-            "organization_dashboards.build_org_dashboard_social",
             "organization_dashboards.build_org_dashboard_top_100",
-            "organization_dashboards.build_org_dashboard_verified_distribution",
             "common_dashboards.build_common_dashboard_rollup",
             "common_dashboards.build_common_dashboard_language_location",
-            "common_dashboards.build_common_dashboard_verified",
         }
         assert set(dag.task_dict) == expected
 
@@ -112,46 +100,18 @@ class TestGithubAnalysisDag:
         repo_summary = dag.task_dict[
             "repository_dashboards.build_repo_dashboard_summary"
         ]
-        repo_event_type = dag.task_dict[
-            "repository_dashboards.build_repo_dashboard_event_type"
-        ]
-        repo_fork = dag.task_dict["repository_dashboards.build_repo_dashboard_fork"]
-        repo_freshness = dag.task_dict[
-            "repository_dashboards.build_repo_dashboard_freshness"
-        ]
         repo_language = dag.task_dict[
             "repository_dashboards.build_repo_dashboard_language"
-        ]
-        repo_owner = dag.task_dict["repository_dashboards.build_repo_dashboard_owner"]
-        repo_top_100 = dag.task_dict[
-            "repository_dashboards.build_repo_dashboard_top_100"
-        ]
-        repo_visibility = dag.task_dict[
-            "repository_dashboards.build_repo_dashboard_visibility"
         ]
         org_summary = dag.task_dict[
             "organization_dashboards.build_org_dashboard_summary"
         ]
-        org_company = dag.task_dict[
-            "organization_dashboards.build_org_dashboard_company"
-        ]
-        org_location = dag.task_dict[
-            "organization_dashboards.build_org_dashboard_location"
-        ]
-        org_size = dag.task_dict["organization_dashboards.build_org_dashboard_size"]
-        org_social = dag.task_dict["organization_dashboards.build_org_dashboard_social"]
         org_top_100 = dag.task_dict[
             "organization_dashboards.build_org_dashboard_top_100"
-        ]
-        org_verified_distribution = dag.task_dict[
-            "organization_dashboards.build_org_dashboard_verified_distribution"
         ]
         common_rollup = dag.task_dict["common_dashboards.build_common_dashboard_rollup"]
         common_language_location = dag.task_dict[
             "common_dashboards.build_common_dashboard_language_location"
-        ]
-        common_verified = dag.task_dict[
-            "common_dashboards.build_common_dashboard_verified"
         ]
 
         assert download.downstream_task_ids == {"parse_flatten_events"}
@@ -176,53 +136,25 @@ class TestGithubAnalysisDag:
         assert build_repo_marts.downstream_task_ids == {
             "common_dashboards.build_common_dashboard_rollup",
             "common_dashboards.build_common_dashboard_language_location",
-            "common_dashboards.build_common_dashboard_verified",
             "repository_dashboards.build_repo_dashboard_summary",
-            "repository_dashboards.build_repo_dashboard_event_type",
-            "repository_dashboards.build_repo_dashboard_fork",
-            "repository_dashboards.build_repo_dashboard_freshness",
             "repository_dashboards.build_repo_dashboard_language",
-            "repository_dashboards.build_repo_dashboard_owner",
-            "repository_dashboards.build_repo_dashboard_top_100",
-            "repository_dashboards.build_repo_dashboard_visibility",
         }
         assert build_org_marts.upstream_task_ids == {"enrich_org_candidates"}
         assert build_org_marts.downstream_task_ids == {
             "common_dashboards.build_common_dashboard_rollup",
             "common_dashboards.build_common_dashboard_language_location",
-            "common_dashboards.build_common_dashboard_verified",
             "organization_dashboards.build_org_dashboard_summary",
-            "organization_dashboards.build_org_dashboard_company",
-            "organization_dashboards.build_org_dashboard_location",
-            "organization_dashboards.build_org_dashboard_size",
-            "organization_dashboards.build_org_dashboard_social",
             "organization_dashboards.build_org_dashboard_top_100",
-            "organization_dashboards.build_org_dashboard_verified_distribution",
         }
         assert repo_summary.upstream_task_ids == {"build_repo_marts"}
-        assert repo_event_type.upstream_task_ids == {"build_repo_marts"}
-        assert repo_fork.upstream_task_ids == {"build_repo_marts"}
-        assert repo_freshness.upstream_task_ids == {"build_repo_marts"}
         assert repo_language.upstream_task_ids == {"build_repo_marts"}
-        assert repo_owner.upstream_task_ids == {"build_repo_marts"}
-        assert repo_top_100.upstream_task_ids == {"build_repo_marts"}
-        assert repo_visibility.upstream_task_ids == {"build_repo_marts"}
         assert org_summary.upstream_task_ids == {"build_org_marts"}
-        assert org_company.upstream_task_ids == {"build_org_marts"}
-        assert org_location.upstream_task_ids == {"build_org_marts"}
-        assert org_size.upstream_task_ids == {"build_org_marts"}
-        assert org_social.upstream_task_ids == {"build_org_marts"}
         assert org_top_100.upstream_task_ids == {"build_org_marts"}
-        assert org_verified_distribution.upstream_task_ids == {"build_org_marts"}
         assert common_rollup.upstream_task_ids == {
             "build_repo_marts",
             "build_org_marts",
         }
         assert common_language_location.upstream_task_ids == {
-            "build_repo_marts",
-            "build_org_marts",
-        }
-        assert common_verified.upstream_task_ids == {
             "build_repo_marts",
             "build_org_marts",
         }
