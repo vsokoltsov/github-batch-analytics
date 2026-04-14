@@ -1,0 +1,67 @@
+name: Helm
+
+on:
+  push:
+    paths:
+      - "infra/helm/**"
+  pull_request:
+    paths:
+      - "infra/helm/**"
+
+jobs:
+  verify:
+    name: Helm Verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Lint chart
+        run: |
+          helm lint ./infra/helm/github-batch-analytics \
+            --set image.repository=example.com/github-batch-analytics-airflow \
+            --set image.tag=test \
+            --set aws.region=eu-central-1 \
+            --set serviceAccount.name=github-batch-analytics \
+            --set-string serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn=arn:aws:iam::123456789012:role/github-batch-analytics-airflow-runtime \
+            --set airflow.database.host=example.cluster-abcdefghijkl.eu-central-1.rds.amazonaws.com \
+            --set airflow.database.port=5432 \
+            --set airflow.database.name=airflow \
+            --set airflow.database.username=airflow \
+            --set-string airflow.database.password=test-password \
+            --set airflow.buckets.landingZone=landing-bucket \
+            --set airflow.buckets.bronzeZone=bronze-bucket \
+            --set airflow.buckets.silverZone=silver-bucket \
+            --set airflow.buckets.marts=marts-bucket \
+            --set airflow.buckets.dltState=dlt-state-bucket \
+            --set airflow.buckets.logging=logging-bucket \
+            --set-string airflow.dlt.githubToken=test-token
+
+      - name: Render chart
+        run: |
+          helm template github-batch-analytics ./infra/helm/github-batch-analytics \
+            --namespace github-batch-analytics \
+            --set image.repository=example.com/github-batch-analytics-airflow \
+            --set image.tag=test \
+            --set aws.region=eu-central-1 \
+            --set serviceAccount.name=github-batch-analytics \
+            --set-string serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn=arn:aws:iam::123456789012:role/github-batch-analytics-airflow-runtime \
+            --set airflow.database.host=example.cluster-abcdefghijkl.eu-central-1.rds.amazonaws.com \
+            --set airflow.database.port=5432 \
+            --set airflow.database.name=airflow \
+            --set airflow.database.username=airflow \
+            --set-string airflow.database.password=test-password \
+            --set airflow.buckets.landingZone=landing-bucket \
+            --set airflow.buckets.bronzeZone=bronze-bucket \
+            --set airflow.buckets.silverZone=silver-bucket \
+            --set airflow.buckets.marts=marts-bucket \
+            --set airflow.buckets.dltState=dlt-state-bucket \
+            --set airflow.buckets.logging=logging-bucket \
+            --set-string airflow.dlt.githubToken=test-token \
+            > /tmp/github-batch-analytics-rendered.yaml
+
+      - name: Validate rendered output is non-empty
+        run: test -s /tmp/github-batch-analytics-rendered.yaml
