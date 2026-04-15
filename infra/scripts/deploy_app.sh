@@ -31,6 +31,11 @@ AIRFLOW_DB_PORT=$(terraform -chdir="$TF_DIR" output -raw airflow_db_port)
 AIRFLOW_DB_NAME=$(terraform -chdir="$TF_DIR" output -raw airflow_db_name)
 AIRFLOW_DB_USERNAME=$(terraform -chdir="$TF_DIR" output -raw airflow_db_username)
 AIRFLOW_DB_PASSWORD=$(terraform -chdir="$TF_DIR" output -raw airflow_db_password)
+ATHENA_DATABASE=$(terraform -chdir="$TF_DIR" output -raw athena_database_name)
+ATHENA_WORKGROUP=$(terraform -chdir="$TF_DIR" output -raw athena_workgroup_name)
+ATHENA_RESULTS_BUCKET=$(terraform -chdir="$TF_DIR" output -raw athena_query_results_bucket_name)
+ATHENA_REPOSITORY_TABLE=$(terraform -chdir="$TF_DIR" output -raw athena_repository_table_name)
+ATHENA_ORGANIZATION_TABLE=$(terraform -chdir="$TF_DIR" output -raw athena_organization_table_name)
 LOGGING_BUCKET=$(terraform -chdir="$TF_DIR" output -raw logging_bucket_name)
 LANDING_BUCKET=$(terraform -chdir="$TF_DIR" output -raw landing_zone_bucket_name)
 BRONZE_BUCKET=$(terraform -chdir="$TF_DIR" output -raw bronze_zone_bucket_name)
@@ -68,6 +73,13 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   --set airflow.database.name="$AIRFLOW_DB_NAME" \
   --set airflow.database.username="$AIRFLOW_DB_USERNAME" \
   --set-string airflow.database.password="$AIRFLOW_DB_PASSWORD" \
+  --set airflow.athena.database="$ATHENA_DATABASE" \
+  --set airflow.athena.workgroup="$ATHENA_WORKGROUP" \
+  --set airflow.athena.queryResultsBucket="$ATHENA_RESULTS_BUCKET" \
+  --set airflow.athena.repositoryTable="$ATHENA_REPOSITORY_TABLE" \
+  --set airflow.athena.organizationTable="$ATHENA_ORGANIZATION_TABLE" \
+  --set airflow.athena.repositoryBucketCount="16" \
+  --set airflow.athena.organizationBucketCount="8" \
   --set airflow.buckets.landingZone="$LANDING_BUCKET" \
   --set airflow.buckets.bronzeZone="$BRONZE_BUCKET" \
   --set airflow.buckets.silverZone="$SILVER_BUCKET" \
