@@ -76,6 +76,48 @@ resource "github_actions_variable" "airflow_db_username" {
   value         = var.airflow_db_username
 }
 
+resource "github_actions_variable" "athena_database_name" {
+  repository    = var.github_repository
+  variable_name = "ATHENA_DATABASE_NAME"
+  value         = var.athena_database_name
+}
+
+resource "github_actions_variable" "athena_workgroup_name" {
+  repository    = var.github_repository
+  variable_name = "ATHENA_WORKGROUP_NAME"
+  value         = var.athena_workgroup_name
+}
+
+resource "github_actions_variable" "athena_query_results_bucket_name" {
+  repository    = var.github_repository
+  variable_name = "ATHENA_QUERY_RESULTS_BUCKET_NAME"
+  value         = var.athena_query_results_bucket_name
+}
+
+resource "github_actions_variable" "athena_repository_table_name" {
+  repository    = var.github_repository
+  variable_name = "ATHENA_REPOSITORY_TABLE_NAME"
+  value         = var.athena_repository_table_name
+}
+
+resource "github_actions_variable" "athena_organization_table_name" {
+  repository    = var.github_repository
+  variable_name = "ATHENA_ORGANIZATION_TABLE_NAME"
+  value         = var.athena_organization_table_name
+}
+
+resource "github_actions_variable" "athena_repository_bucket_count" {
+  repository    = var.github_repository
+  variable_name = "ATHENA_REPOSITORY_BUCKET_COUNT"
+  value         = tostring(var.athena_repository_bucket_count)
+}
+
+resource "github_actions_variable" "athena_organization_bucket_count" {
+  repository    = var.github_repository
+  variable_name = "ATHENA_ORGANIZATION_BUCKET_COUNT"
+  value         = tostring(var.athena_organization_bucket_count)
+}
+
 resource "github_actions_secret" "airflow_db_password" {
   repository      = var.github_repository
   secret_name     = "AIRFLOW_DB_PASSWORD"

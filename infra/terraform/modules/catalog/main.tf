@@ -502,7 +502,7 @@ resource "aws_glue_catalog_table" "repository_marts" {
     "projection.dt.interval.unit" = "DAYS"
     "projection.hr.type"          = "integer"
     "projection.hr.range"         = "0,23"
-    "storage.location.template"   = "s3://${var.marts_bucket_name}/repositories/dt=$${dt}/hr=$${hr}/"
+    "storage.location.template"   = "s3://${var.marts_bucket_name}/${var.athena_repository_table_name}/dt=$${dt}/hr=$${hr}/"
     typeOfData                    = "file"
   }
 
@@ -516,7 +516,60 @@ resource "aws_glue_catalog_table" "repository_marts" {
   }
 
   storage_descriptor {
-    location      = "s3://${var.marts_bucket_name}/repositories/"
+    location          = "s3://${var.marts_bucket_name}/${var.athena_repository_table_name}/"
+    input_format      = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
+    output_format     = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
+    bucket_columns    = ["repo_id"]
+    number_of_buckets = var.athena_repository_bucket_count
+
+    ser_de_info {
+      name                  = "parquet"
+      serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
+    }
+
+    dynamic "columns" {
+      for_each = local.repository_mart_columns
+
+      content {
+        name = columns.value.name
+        type = columns.value.type
+      }
+    }
+  }
+}
+
+resource "aws_glue_catalog_table" "repository_marts_stage" {
+  name          = "${var.athena_repository_table_name}_stage"
+  database_name = aws_glue_catalog_database.analytics.name
+  table_type    = "EXTERNAL_TABLE"
+
+  parameters = {
+    EXTERNAL                      = "TRUE"
+    classification                = "parquet"
+    "parquet.compression"         = "SNAPPY"
+    "projection.enabled"          = "true"
+    "projection.dt.type"          = "date"
+    "projection.dt.range"         = "${var.athena_partition_projection_start_date},NOW"
+    "projection.dt.format"        = "yyyy-MM-dd"
+    "projection.dt.interval"      = "1"
+    "projection.dt.interval.unit" = "DAYS"
+    "projection.hr.type"          = "integer"
+    "projection.hr.range"         = "0,23"
+    "storage.location.template"   = "s3://${var.marts_bucket_name}/${var.athena_repository_table_name}_stage/dt=$${dt}/hr=$${hr}/"
+    typeOfData                    = "file"
+  }
+
+  dynamic "partition_keys" {
+    for_each = local.athena_partition_keys
+
+    content {
+      name = partition_keys.value.name
+      type = partition_keys.value.type
+    }
+  }
+
+  storage_descriptor {
+    location      = "s3://${var.marts_bucket_name}/${var.athena_repository_table_name}_stage/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 
@@ -553,7 +606,7 @@ resource "aws_glue_catalog_table" "organization_marts" {
     "projection.dt.interval.unit" = "DAYS"
     "projection.hr.type"          = "integer"
     "projection.hr.range"         = "0,23"
-    "storage.location.template"   = "s3://${var.marts_bucket_name}/organizations/dt=$${dt}/hr=$${hr}/"
+    "storage.location.template"   = "s3://${var.marts_bucket_name}/${var.athena_organization_table_name}/dt=$${dt}/hr=$${hr}/"
     typeOfData                    = "file"
   }
 
@@ -567,7 +620,60 @@ resource "aws_glue_catalog_table" "organization_marts" {
   }
 
   storage_descriptor {
-    location      = "s3://${var.marts_bucket_name}/organizations/"
+    location          = "s3://${var.marts_bucket_name}/${var.athena_organization_table_name}/"
+    input_format      = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
+    output_format     = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
+    bucket_columns    = ["org_id"]
+    number_of_buckets = var.athena_organization_bucket_count
+
+    ser_de_info {
+      name                  = "parquet"
+      serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
+    }
+
+    dynamic "columns" {
+      for_each = local.organization_mart_columns
+
+      content {
+        name = columns.value.name
+        type = columns.value.type
+      }
+    }
+  }
+}
+
+resource "aws_glue_catalog_table" "organization_marts_stage" {
+  name          = "${var.athena_organization_table_name}_stage"
+  database_name = aws_glue_catalog_database.analytics.name
+  table_type    = "EXTERNAL_TABLE"
+
+  parameters = {
+    EXTERNAL                      = "TRUE"
+    classification                = "parquet"
+    "parquet.compression"         = "SNAPPY"
+    "projection.enabled"          = "true"
+    "projection.dt.type"          = "date"
+    "projection.dt.range"         = "${var.athena_partition_projection_start_date},NOW"
+    "projection.dt.format"        = "yyyy-MM-dd"
+    "projection.dt.interval"      = "1"
+    "projection.dt.interval.unit" = "DAYS"
+    "projection.hr.type"          = "integer"
+    "projection.hr.range"         = "0,23"
+    "storage.location.template"   = "s3://${var.marts_bucket_name}/${var.athena_organization_table_name}_stage/dt=$${dt}/hr=$${hr}/"
+    typeOfData                    = "file"
+  }
+
+  dynamic "partition_keys" {
+    for_each = local.athena_partition_keys
+
+    content {
+      name = partition_keys.value.name
+      type = partition_keys.value.type
+    }
+  }
+
+  storage_descriptor {
+    location      = "s3://${var.marts_bucket_name}/${var.athena_organization_table_name}_stage/"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
 

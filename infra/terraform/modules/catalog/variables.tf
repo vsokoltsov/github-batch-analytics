@@ -5,5 +5,7 @@ variable "athena_enforce_workgroup_configuration" { type = bool }
 variable "athena_partition_projection_start_date" { type = string }
 variable "athena_repository_table_name" { type = string }
 variable "athena_organization_table_name" { type = string }
+variable "athena_repository_bucket_count" { type = number }
+variable "athena_organization_bucket_count" { type = number }
 variable "marts_bucket_name" { type = string }
 variable "tags" { type = map(string) }

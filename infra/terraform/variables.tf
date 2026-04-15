@@ -72,7 +72,7 @@ variable "terraform_state_bucket_name" {
 variable "athena_enforce_workgroup_configuration" {
   description = "Whether Athena should enforce workgroup-level settings."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "athena_partition_projection_start_date" {
@@ -91,6 +91,18 @@ variable "athena_organization_table_name" {
   description = "Athena/Glue table name for organization marts."
   type        = string
   default     = "organizations"
+}
+
+variable "athena_repository_bucket_count" {
+  description = "Bucket count for the final repository marts Athena table."
+  type        = number
+  default     = 16
+}
+
+variable "athena_organization_bucket_count" {
+  description = "Bucket count for the final organization marts Athena table."
+  type        = number
+  default     = 8
 }
 
 variable "github_owner" {

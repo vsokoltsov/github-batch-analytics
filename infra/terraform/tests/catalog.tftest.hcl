@@ -11,10 +11,12 @@ run "plan_catalog_module" {
     athena_query_results_bucket_name       = "athena-results-bucket"
     athena_database_name                   = "github_analytics"
     athena_workgroup_name                  = "github-batch-analytics"
-    athena_enforce_workgroup_configuration = true
+    athena_enforce_workgroup_configuration = false
     athena_partition_projection_start_date = "2026-01-01"
     athena_repository_table_name           = "repositories"
     athena_organization_table_name         = "organizations"
+    athena_repository_bucket_count         = 16
+    athena_organization_bucket_count       = 8
     marts_bucket_name                      = "marts-bucket"
     tags = {
       Environment = "test"
@@ -35,6 +37,16 @@ run "plan_catalog_module" {
   assert {
     condition     = aws_glue_catalog_table.repository_marts.name == "repositories"
     error_message = "Repository marts table name should match the configured input."
+  }
+
+  assert {
+    condition     = aws_glue_catalog_table.repository_marts_stage.name == "repositories_stage"
+    error_message = "Repository stage table should be present for Athena bucket materialization."
+  }
+
+  assert {
+    condition     = aws_glue_catalog_table.organization_marts.storage_descriptor[0].number_of_buckets == 8
+    error_message = "Organization marts table should keep the configured bucket count."
   }
 
   assert {

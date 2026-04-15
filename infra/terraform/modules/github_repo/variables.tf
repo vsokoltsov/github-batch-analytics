@@ -18,6 +18,13 @@ variable "airflow_db_password" {
   type      = string
   sensitive = true
 }
+variable "athena_database_name" { type = string }
+variable "athena_workgroup_name" { type = string }
+variable "athena_query_results_bucket_name" { type = string }
+variable "athena_repository_table_name" { type = string }
+variable "athena_organization_table_name" { type = string }
+variable "athena_repository_bucket_count" { type = number }
+variable "athena_organization_bucket_count" { type = number }
 variable "landing_zone_bucket_name" { type = string }
 variable "bronze_zone_bucket_name" { type = string }
 variable "silver_zone_bucket_name" { type = string }

@@ -73,6 +73,21 @@ data "aws_iam_policy_document" "airflow_runtime" {
     ]
     resources = local.airflow_runtime_object_arns
   }
+
+  statement {
+    sid    = "AthenaAndGlueReadWrite"
+    effect = "Allow"
+    actions = [
+      "athena:GetQueryExecution",
+      "athena:GetQueryResults",
+      "athena:GetWorkGroup",
+      "athena:StartQueryExecution",
+      "glue:GetDatabase",
+      "glue:GetTable",
+      "glue:GetTables",
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "airflow_runtime" {

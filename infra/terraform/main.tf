@@ -69,6 +69,8 @@ module "catalog" {
   athena_partition_projection_start_date = var.athena_partition_projection_start_date
   athena_repository_table_name           = var.athena_repository_table_name
   athena_organization_table_name         = var.athena_organization_table_name
+  athena_repository_bucket_count         = var.athena_repository_bucket_count
+  athena_organization_bucket_count       = var.athena_organization_bucket_count
   marts_bucket_name                      = module.storage.marts_bucket_name
   tags                                   = var.tags
 }
@@ -102,25 +104,32 @@ module "identity" {
 module "github_repo" {
   source = "./modules/github_repo"
 
-  github_repository               = var.github_repository
-  github_actions_role_arn         = module.identity.github_actions_role_arn
-  github_token                    = var.github_token
-  aws_region                      = var.aws_region
-  ecr_repository_name             = module.registry.repository_name
-  eks_cluster_name                = module.eks_cluster.cluster_name
-  kubernetes_namespace            = var.kubernetes_namespace
-  kubernetes_service_account_name = var.kubernetes_service_account_name
-  airflow_runtime_role_arn        = module.identity.airflow_runtime_role_arn
-  airflow_db_host                 = module.database.host
-  airflow_db_port                 = module.database.port
-  airflow_db_name                 = module.database.name
-  airflow_db_username             = module.database.username
-  airflow_db_password             = module.database.password
-  landing_zone_bucket_name        = module.storage.landing_zone_bucket_name
-  bronze_zone_bucket_name         = module.storage.bronze_zone_bucket_name
-  silver_zone_bucket_name         = module.storage.silver_zone_bucket_name
-  marts_bucket_name               = module.storage.marts_bucket_name
-  dlt_state_bucket_name           = module.storage.dlt_state_bucket_name
-  logging_bucket_name             = module.storage.logging_bucket_name
-  terraform_state_bucket_name     = var.terraform_state_bucket_name
+  github_repository                = var.github_repository
+  github_actions_role_arn          = module.identity.github_actions_role_arn
+  github_token                     = var.github_token
+  aws_region                       = var.aws_region
+  ecr_repository_name              = module.registry.repository_name
+  eks_cluster_name                 = module.eks_cluster.cluster_name
+  kubernetes_namespace             = var.kubernetes_namespace
+  kubernetes_service_account_name  = var.kubernetes_service_account_name
+  airflow_runtime_role_arn         = module.identity.airflow_runtime_role_arn
+  airflow_db_host                  = module.database.host
+  airflow_db_port                  = module.database.port
+  airflow_db_name                  = module.database.name
+  airflow_db_username              = module.database.username
+  airflow_db_password              = module.database.password
+  athena_database_name             = module.catalog.athena_database_name
+  athena_workgroup_name            = module.catalog.athena_workgroup_name
+  athena_query_results_bucket_name = module.catalog.athena_query_results_bucket_name
+  athena_repository_table_name     = module.catalog.athena_repository_table_name
+  athena_organization_table_name   = module.catalog.athena_organization_table_name
+  athena_repository_bucket_count   = var.athena_repository_bucket_count
+  athena_organization_bucket_count = var.athena_organization_bucket_count
+  landing_zone_bucket_name         = module.storage.landing_zone_bucket_name
+  bronze_zone_bucket_name          = module.storage.bronze_zone_bucket_name
+  silver_zone_bucket_name          = module.storage.silver_zone_bucket_name
+  marts_bucket_name                = module.storage.marts_bucket_name
+  dlt_state_bucket_name            = module.storage.dlt_state_bucket_name
+  logging_bucket_name              = module.storage.logging_bucket_name
+  terraform_state_bucket_name      = var.terraform_state_bucket_name
 }
