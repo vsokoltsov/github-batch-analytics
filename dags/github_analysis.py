@@ -14,6 +14,10 @@ from gba.tasks.enrich_candidates import (
     get_enrich_org_candidates_task,
 )
 from gba.tasks.build_marts import build_repo_marts, build_org_marts
+from gba.tasks.materialize_bucketed_marts import (
+    materialize_org_bucketed_marts,
+    materialize_repo_bucketed_marts,
+)
 from gba.tasks.build_dashboard_views import (
     repository_summary_dashboard,
     repository_language_dashboard,
@@ -98,40 +102,51 @@ with DAG(
     build_repository_marts_task = build_repository_marts.task
     build_organization_marts_task = build_organization_marts.task
 
+    materialized_repository_marts = materialize_repo_bucketed_marts(
+        dt="{{ ds }}",
+        hour="{{ logical_date.hour }}",
+    )
+    materialized_organization_marts = materialize_org_bucketed_marts(
+        dt="{{ ds }}",
+        hour="{{ logical_date.hour }}",
+    )
+    materialized_repository_marts_group = materialized_repository_marts.task_group
+    materialized_organization_marts_group = materialized_organization_marts.task_group
+
     with TaskGroup(group_id="repository_dashboards") as repository_dashboards:
         repo_summary = repository_summary_dashboard(
-            input_path=build_repository_marts.output_path,
+            input_path=materialized_repository_marts.output_path,
             dt="{{ ds }}",
             hr="{{ logical_date.hour }}",
         )
         repo_language = repository_language_dashboard(
-            input_path=build_repository_marts.output_path,
+            input_path=materialized_repository_marts.output_path,
             dt="{{ ds }}",
             hr="{{ logical_date.hour }}",
         )
 
     with TaskGroup(group_id="organization_dashboards") as organization_dashboards:
         org_summary = org_summary_dashboard(
-            input_path=build_organization_marts.output_path,
+            input_path=materialized_organization_marts.output_path,
             dt="{{ ds }}",
             hr="{{ logical_date.hour }}",
         )
         org_top_100 = org_top_100_dashboard(
-            input_path=build_organization_marts.output_path,
+            input_path=materialized_organization_marts.output_path,
             dt="{{ ds }}",
             hr="{{ logical_date.hour }}",
         )
 
     with TaskGroup(group_id="common_dashboards") as common_dashboards:
         common_rollup = common_rollup_dashboard(
-            repo_path=build_repository_marts.output_path,
-            org_path=build_organization_marts.output_path,
+            repo_path=materialized_repository_marts.output_path,
+            org_path=materialized_organization_marts.output_path,
             dt="{{ ds }}",
             hr="{{ logical_date.hour }}",
         )
         common_language_location = common_language_location_dashboard(
-            repo_path=build_repository_marts.output_path,
-            org_path=build_organization_marts.output_path,
+            repo_path=materialized_repository_marts.output_path,
+            org_path=materialized_organization_marts.output_path,
             dt="{{ ds }}",
             hr="{{ logical_date.hour }}",
         )
@@ -149,6 +164,12 @@ with DAG(
     enrich_repo_candidates >> build_repository_marts_task
     enrich_org_candidates >> build_organization_marts_task
 
-    build_repository_marts_task >> repository_dashboards
-    build_organization_marts_task >> organization_dashboards
-    [build_repository_marts_task, build_organization_marts_task] >> common_dashboards
+    build_repository_marts_task >> materialized_repository_marts_group
+    build_organization_marts_task >> materialized_organization_marts_group
+
+    materialized_repository_marts_group >> repository_dashboards
+    materialized_organization_marts_group >> organization_dashboards
+    [
+        materialized_repository_marts_group,
+        materialized_organization_marts_group,
+    ] >> common_dashboards
