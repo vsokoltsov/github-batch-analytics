@@ -365,7 +365,18 @@ This is a deliberate tradeoff. The pipeline keeps Spark writes simple and determ
 - [`uv`](https://docs.astral.sh/uv/)
 - Docker and Docker Compose
 - AWS credentials with access to the project buckets
+- a GitHub token for the enrichment steps
+- provisioned S3 buckets for landing, bronze, silver, marts, DLT state, and Athena query results
+- a configured AWS Athena workgroup and Glue database/catalog
 - `direnv` if you want repository-local environment loading via `.envrc`
+
+Even for local execution, the application is not fully self-contained. The pipeline and dashboard read and write real AWS resources, so a usable local setup still requires:
+
+- an AWS account with the project buckets and Athena/Glue metadata in place
+- a GitHub token for API enrichment
+- environment variables pointing at those resources
+
+The easiest way to provision the full stack is Terraform. The repository includes [terraform.tfvars.example](/Users/vadim.sokoltsov/learning/github-batch-analytics/infra/terraform/terraform.tfvars.example) under `infra/terraform/` as the application setup template for bucket names, Athena settings, and related infrastructure inputs.
 
 ### 1. Prepare configuration
 
@@ -401,7 +412,19 @@ Also prepare the runtime secrets that are intentionally not stored as sample fil
 - create and populate [`.streamlit/secrets.toml`](.streamlit/secrets.toml) if you want to run the dashboard with Streamlit-managed secrets instead of shell environment variables
   - used by the Streamlit dashboard to read AWS and Athena settings through `st.secrets`
   - this is especially useful when matching the hosted Streamlit Community Cloud setup locally
+- provide a GitHub token in your local environment for enrichment tasks
+  - this is typically exported through `.envrc` as `TF_VAR_github_token` for Terraform and as the application runtime token for local DAG execution
 - set `TF_VAR_github_token` in `.envrc` if you work with Terraform and GitHub resources locally
+
+If you have not provisioned the AWS resources yet, bootstrap them first:
+
+```bash
+cp infra/terraform/terraform.tfvars.example infra/terraform/terraform.tfvars
+terraform -chdir=infra/terraform plan
+terraform -chdir=infra/terraform apply
+```
+
+That path provisions the S3 buckets, Athena workgroup, Glue catalog objects, IAM resources, and related infrastructure the local application expects.
 
 Related local-only configuration files:
 
