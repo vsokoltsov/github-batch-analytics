@@ -14,7 +14,7 @@
 ![Amazon S3](https://img.shields.io/badge/Amazon%20S3-Data%20Lake-569A31?logo=amazons3&logoColor=white)
 ![Amazon Athena](https://img.shields.io/badge/Amazon%20Athena-Warehouse-6F2DA8?logo=amazonaws&logoColor=white)
 ![AWS Glue](https://img.shields.io/badge/AWS%20Glue-Catalog-FF9900?logo=amazonaws&logoColor=white)
-![Amazon QuickSight](https://img.shields.io/badge/Amazon%20QuickSight-Dashboards-00A1C9?logo=amazonaws&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?logo=streamlit&logoColor=white)
 ![Amazon EKS](https://img.shields.io/badge/Amazon%20EKS-Kubernetes-FF9900?logo=amazoneks&logoColor=white)
 ![Helm](https://img.shields.io/badge/Helm-Deployment-0F1689?logo=helm&logoColor=white)
 ![Terraform](https://img.shields.io/badge/Terraform-IaC-844FBA?logo=terraform&logoColor=white)
@@ -31,9 +31,9 @@ Build a production-oriented batch analytics platform for GitHub public activity 
 - identify repositories and organizations worth deeper analysis
 - enrich those candidates with GitHub API metadata
 - publish curated marts and dashboard-ready datasets to a low-ops warehouse
-- expose those datasets to downstream BI consumers through Athena and Amazon QuickSight
+- expose those datasets to downstream BI consumers through Athena and Streamlit
 
-The project is intentionally designed as a lakehouse-style batch pipeline rather than a streaming system. The emphasis is on predictable hourly processing, cheap object storage, reproducible Spark jobs, and queryable Parquet outputs that can power analyst workflows and QuickSight dashboards without maintaining a dedicated warehouse cluster.
+The project is intentionally designed as a lakehouse-style batch pipeline rather than a streaming system. The emphasis is on predictable hourly processing, cheap object storage, reproducible Spark jobs, and queryable Parquet outputs that can power analyst workflows and Streamlit dashboards without maintaining a dedicated warehouse cluster.
 
 ## 🧩 Problem Statement
 
@@ -44,7 +44,7 @@ GH Archive publishes GitHub activity as hourly JSON event files. That raw feed i
 - entity-level business dimensions such as language, owner type, location, company, or verification status are not available directly in the event feed
 - downstream users need stable analytical tables and dashboard datasets, not raw JSON blobs
 
-This project solves that by orchestrating an hourly Airflow DAG that runs Spark jobs over GH Archive data, stores each transformation stage in S3, enriches selected entities through the GitHub API, and publishes Glue Catalog tables that can be queried in Athena and visualized in QuickSight.
+This project solves that by orchestrating an hourly Airflow DAG that runs Spark jobs over GH Archive data, stores each transformation stage in S3, enriches selected entities through the GitHub API, and publishes Glue Catalog tables that can be queried in Athena and visualized in Streamlit.
 
 ## 🔄 Data Pipeline
 
@@ -79,7 +79,7 @@ Pipeline stages:
    - writes curated Parquet marts to the marts bucket
 7. dashboard builders
    - materialize dashboard-specific datasets for repositories, organizations, and common cross-cutting views
-   - these outputs are exposed through Athena tables and intended for QuickSight consumption
+   - these outputs are exposed through Athena tables and intended for Streamlit consumption
 
 S3 zones:
 
@@ -299,8 +299,8 @@ Athena is the warehouse query layer for this project because it matches the stor
 - the pipeline already writes Parquet datasets to S3
 - Glue Catalog provides the metadata layer without extra warehouse infrastructure
 - analysts can query the same S3-backed datasets that power the batch pipeline
-- QuickSight can sit on top of Athena to build dashboards without introducing another serving database
-- the operational model stays simple: Spark writes Parquet, Glue defines metadata, Athena queries it, QuickSight visualizes it
+- Streamlit can sit on top of Athena to build dashboards without introducing another serving database
+- the operational model stays simple: Spark writes Parquet, Glue defines metadata, Athena queries it, Streamlit visualizes it
 
 Warehouse metadata is defined in [`infra/terraform/modules/catalog/main.tf`](./infra/terraform/modules/catalog/main.tf).
 
@@ -319,7 +319,7 @@ Current warehouse design:
   - Spark writes Parquet to S3
   - Glue Catalog exposes the datasets to Athena
   - Athena provides the SQL layer
-  - QuickSight can use Athena datasets as the dashboard source
+  - Streamlit can use Athena datasets as the dashboard source
 
 Partitioning strategy:
 
@@ -341,7 +341,7 @@ Clustering and file layout:
   - Parquet column pruning
   - smaller dashboard-specific datasets written for downstream reporting
 
-This is a deliberate tradeoff. For hourly batch analytics, partitioned Parquet on S3 plus Athena is simpler and cheaper than operating a dedicated warehouse, and it is a natural fit for QuickSight dashboards built over time-partitioned analytical tables.
+This is a deliberate tradeoff. For hourly batch analytics, partitioned Parquet on S3 plus Athena is simpler and cheaper than operating a dedicated warehouse, and it is a natural fit for Streamlit dashboards built over time-partitioned analytical tables.
 
 ## 🛠️ Local Setup
 
