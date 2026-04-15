@@ -98,6 +98,10 @@ S3 zones:
 
 ![](./assets/airflow_dag.png)
 
+## Dashboards
+
+* [Streamlit dashboard](https://app-batch-analytics-txp3puizg6e5jq7onsqo6o.streamlit.app/common)
+
 ## 🧱 Structure
 
 ```text
