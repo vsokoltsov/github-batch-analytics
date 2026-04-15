@@ -106,190 +106,190 @@ S3 zones:
 
 ```text
 .
-├── .dlt/                                                  - Local DLT configuration directory.
-│   └── config.toml                                        - Base DLT runtime configuration.
-├── .github/                                               - GitHub automation configuration.
-│   └── workflows/                                         - CI validation workflows.
-│       ├── dag.yml                                        - CI for DAG and Python test changes under `dags/` and `tests/`.
-│       ├── helm.yml                                       - CI for Helm chart linting and template rendering.
-│       └── terraform.yml                                  - CI for Terraform fmt, tests, and plan.
-├── .env.sample                                            - Example local environment variables for Airflow and bucket names.
-├── .envrc.sample                                          - Example `direnv` file for AWS, Terraform, and Python path setup.
-├── .gitignore                                             - Git ignore rules for local state, credentials, and generated artifacts.
-├── .python-version                                        - Python version pin for local tooling.
-├── .sqlfluff                                              - SQLFluff configuration for dashboard SQL files.
-├── Dockerfile                                             - Airflow runtime image with Spark client binaries copied from the Spark image.
-├── Dockerfile.jupyter                                     - Local Jupyter/Spark notebook image.
-├── Makefile                                               - Common local linting, notebook, and utility commands.
-├── README.md                                              - Project overview, architecture, and local setup.
-├── dags/                                                  - Airflow DAG definitions and pipeline implementation.
-│   ├── __init__.py                                        - Marks `dags` as a Python package.
-│   ├── github_analysis.py                                 - Main hourly batch DAG orchestrating the entire pipeline.
-│   └── gba/                                               - Application package for services, tasks, and settings.
-│       ├── __init__.py                                    - Marks the package root.
-│       ├── services/                                      - Spark jobs and service-layer business logic.
-│       │   ├── __init__.py                                - Marks services as a package.
-│       │   ├── build_aggregates.py                        - Computes repository and organization aggregates.
-│       │   ├── build_candidates.py                        - Scores and filters candidate entities for enrichment.
-│       │   ├── build_curated_marts.py                     - Builds final curated repository and organization marts.
-│       │   ├── build_dashboard_views.py                   - Executes SQL-backed dashboard dataset builders.
-│       │   ├── download_github_archive.py                 - Downloads and uploads hourly GH Archive files.
-│       │   ├── parse_flatten.py                           - Flattens raw event JSON into structured Parquet.
-│       │   ├── utils.py                                   - Shared helpers such as `s3://` to `s3a://` conversion.
-│       │   ├── dashboards/                                - SQL definitions for dashboard datasets.
-│       │   │   ├── common/                                - Cross-domain dashboards combining repository and organization marts.
-│       │   │   │   ├── language_location.sql              - Common dashboard by repository language and org location.
-│       │   │   │   ├── rollup.sql                         - Common rollup dashboard across marts.
-│       │   │   │   └── verified.sql                       - Common dashboard around verification dimensions.
-│       │   │   ├── organizations/                         - Organization dashboard SQL definitions.
-│       │   │   │   ├── company.sql                        - Organization dashboard grouped by company.
-│       │   │   │   ├── location.sql                       - Organization dashboard grouped by location.
-│       │   │   │   ├── size.sql                           - Organization size distribution dashboard.
-│       │   │   │   ├── social.sql                         - Organization social/profile metrics dashboard.
-│       │   │   │   ├── summary.sql                        - Main organization summary dashboard.
-│       │   │   │   ├── top_100.sql                        - Top organizations dashboard.
-│       │   │   │   └── verified_distribution.sql          - Verification-status distribution dashboard.
-│       │   │   └── repositories/                          - Repository dashboard SQL definitions.
-│       │   │       ├── event_type.sql                     - Event-type distribution dashboard.
-│       │   │       ├── fork.sql                           - Fork-status dashboard.
-│       │   │       ├── freshness.sql                      - Repository freshness dashboard.
-│       │   │       ├── language.sql                       - Repository language dashboard.
-│       │   │       ├── owner.sql                          - Repository owner-type dashboard.
-│       │   │       ├── summary.sql                        - Main repository summary dashboard.
-│       │   │       ├── top_100.sql                        - Top repositories dashboard.
-│       │   │       └── visibility.sql                     - Repository visibility dashboard.
-│       │   └── enrichment/                                - GitHub API enrichment clients and logic.
-│       │       ├── __init__.py                            - Marks enrichment as a package.
-│       │       ├── client.py                              - Low-level GitHub API client logic.
-│       │       ├── errors.py                              - Enrichment-specific exception types.
-│       │       ├── organization.py                        - Organization enrichment workflow and S3 outputs.
-│       │       └── repository.py                          - Repository enrichment workflow and S3 outputs.
-│       ├── settings/                                      - Typed configuration loaders for tasks and services.
-│       │   ├── __init__.py                                - Marks settings as a package.
-│       │   ├── build_aggregates.py                        - Settings for aggregate-building tasks.
-│       │   ├── build_candidates.py                        - Settings for candidate-building tasks.
-│       │   ├── build_curated_marts.py                     - Settings for marts generation.
-│       │   ├── build_dashboard_views.py                   - Settings for dashboard generation.
-│       │   ├── enrich_candidates.py                       - Settings for GitHub enrichment tasks.
-│       │   ├── enums.py                                   - Shared enums for dashboard and pipeline settings.
-│       │   ├── get_archive.py                             - Settings for GH Archive downloads.
-│       │   └── parse_flatten.py                           - Settings for flattening raw events.
-│       └── tasks/                                         - Airflow task factories wrapping services as operators.
-│           ├── __init__.py                                - Marks tasks as a package.
-│           ├── build_aggregates.py                        - Creates SparkSubmitOperator tasks for aggregates.
-│           ├── build_candidates.py                        - Creates SparkSubmitOperator tasks for candidates.
-│           ├── build_dashboard_views.py                   - Creates SparkSubmitOperator tasks for dashboards.
-│           ├── build_marts.py                             - Creates SparkSubmitOperator tasks for curated marts.
-│           ├── enrich_candidates.py                       - Creates enrichment tasks for GitHub API snapshots.
-│           ├── get_archive.py                             - Creates the archive download task.
-│           ├── parse_flatten_events.py                    - Creates the flattening Spark task.
-│           └── spark_conf.py                              - Shared Spark configuration assembly.
-├── docker-compose.yaml                                    - Local development stack for Airflow, Spark, Postgres, and Jupyter.
-├── infra/                                                 - Deployment and infrastructure definitions.
-│   ├── helm/                                              - Helm chart for Kubernetes deployment.
-│   │   └── github-batch-analytics/                        - Application chart.
-│   │       ├── Chart.yaml                                 - Chart metadata.
-│   │       ├── values.yaml                                - Default chart values for images, buckets, and resources.
-│   │       └── templates/                                 - Kubernetes manifests rendered by Helm.
-│   │           ├── NOTES.txt                              - Post-install notes shown by Helm.
-│   │           ├── _helpers.tpl                           - Shared Helm template helpers.
-│   │           ├── airflow-api-server.yaml                - Airflow API server deployment and service.
-│   │           ├── airflow-dag-processor.yaml             - Airflow DAG processor deployment.
-│   │           ├── airflow-init-job.yaml                  - One-shot Airflow database initialization job.
-│   │           ├── airflow-scheduler.yaml                 - Airflow scheduler deployment.
-│   │           ├── configmap.yaml                         - Non-secret runtime environment configuration.
-│   │           ├── secret.yaml                            - Secret-backed runtime configuration.
-│   │           ├── serviceaccount.yaml                    - Kubernetes service account with IAM role integration.
-│   │           ├── spark-master.yaml                      - Spark master deployment and service.
-│   │           └── spark-worker.yaml                      - Spark worker deployment.
-│   ├── scripts/                                           - Helper scripts for image and infrastructure deployment.
-│   │   ├── build_and_push_image.sh                        - Builds and pushes the Airflow application image.
-│   │   ├── deploy_app.sh                                  - Deploys the application stack to Kubernetes with Helm.
-│   │   └── deploy_infra.sh                                - Applies infrastructure changes with Terraform.
-│   └── terraform/                                         - Terraform root module and reusable infrastructure modules.
-│       ├── README.md                                      - Terraform-specific notes, including remote state bootstrap.
-│       ├── backend.hcl.example                            - Example backend configuration for remote S3 state.
-│       ├── backend.tf                                     - Backend block declaration.
-│       ├── github_provider.tf                             - GitHub provider configuration.
-│       ├── main.tf                                        - Root module wiring across infrastructure modules.
-│       ├── outputs.tf                                     - Root outputs for shared infrastructure values.
-│       ├── provider.tf                                    - AWS provider configuration.
-│       ├── terraform.tfvars.example                       - Example Terraform variables file.
-│       ├── variables.tf                                   - Root input variables.
-│       ├── versions.tf                                    - Terraform and provider version constraints.
-│       ├── modules/                                       - Reusable infrastructure modules.
-│       │   ├── catalog/                                   - Athena and Glue warehouse metadata.
-│       │   │   ├── main.tf                                - Creates Athena workgroup, Glue database, and Glue tables.
-│       │   │   ├── outputs.tf                             - Exposes catalog resource identifiers.
-│       │   │   └── variables.tf                           - Inputs for the catalog module.
-│       │   ├── database/                                  - PostgreSQL infrastructure.
-│       │   │   ├── main.tf                                - Creates the Airflow RDS database and networking resources.
-│       │   │   ├── outputs.tf                             - Exposes database connection values.
-│       │   │   └── variables.tf                           - Inputs for the database module.
-│       │   ├── eks_cluster/                               - Kubernetes cluster infrastructure.
-│       │   │   ├── main.tf                                - Creates the EKS cluster and managed node group.
-│       │   │   ├── outputs.tf                             - Exposes cluster identifiers and access details.
-│       │   │   └── variables.tf                           - Inputs for the EKS module.
-│       │   ├── github_repo/                               - GitHub repository variables and secrets.
-│       │   │   ├── main.tf                                - Creates GitHub Actions variables and secrets.
-│       │   │   ├── variables.tf                           - Inputs for the GitHub repository module.
-│       │   │   └── versions.tf                            - Provider version constraints for the GitHub module.
-│       │   ├── identity/                                  - IAM roles, policies, OIDC, and access control.
-│       │   │   ├── main.tf                                - Creates IAM resources for runtime and CI/CD access.
-│       │   │   ├── outputs.tf                             - Exposes IAM role and policy outputs.
-│       │   │   └── variables.tf                           - Inputs for the identity module.
-│       │   ├── network/                                   - VPC and subnet topology.
-│       │   │   ├── main.tf                                - Creates the VPC, subnets, routes, and NAT gateway.
-│       │   │   ├── outputs.tf                             - Exposes networking identifiers.
-│       │   │   └── variables.tf                           - Inputs for the network module.
-│       │   ├── registry/                                  - Container registry resources.
-│       │   │   ├── main.tf                                - Creates the ECR repository and lifecycle policy.
-│       │   │   ├── outputs.tf                             - Exposes registry identifiers and URLs.
-│       │   │   └── variables.tf                           - Inputs for the registry module.
-│       │   └── storage/                                   - S3 buckets and related access policies.
-│       │       ├── main.tf                                - Creates landing, bronze, silver, marts, DLT state, and logging buckets.
-│       │       ├── outputs.tf                             - Exposes bucket names, ARNs, and policy outputs.
-│       │       └── variables.tf                           - Inputs for the storage module.
-│       └── tests/                                         - Native Terraform tests executed with `terraform test`.
-│           ├── catalog.tftest.hcl                         - Tests the catalog module.
-│           ├── database.tftest.hcl                        - Tests the database module.
-│           ├── github_repo.tftest.hcl                     - Tests the GitHub repository module.
-│           ├── identity.tftest.hcl                        - Tests the identity module.
-│           ├── registry.tftest.hcl                        - Tests the registry module.
-│           └── storage.tftest.hcl                         - Tests the storage module.
-├── notebooks/                                             - Exploratory notebooks and Spark helpers.
-│   ├── 3_build_aggregates_org.ipynb                       - Notebook for organization aggregate exploration.
-│   ├── 3_build_aggregates_repo.ipynb                      - Notebook for repository aggregate exploration.
-│   ├── 4_build_candidates.ipynb                           - Notebook for candidate-building experiments.
-│   ├── 6_write_warehouse.ipynb                            - Notebook for warehouse and Athena-related checks.
-│   ├── README.md                                          - Notes for notebook usage.
-│   ├── __init__.py                                        - Marks notebooks helpers as a package.
-│   └── spark_session.py                                   - Shared Spark session helper for notebooks.
-├── pyproject.toml                                         - Python project metadata and dependencies.
-├── tests/                                                 - Unit and integration test suite.
-│   ├── __init__.py                                        - Marks tests as a package.
-│   ├── conftest.py                                        - Shared pytest fixtures and test configuration.
-│   ├── integration/                                       - End-to-end and task-level integration tests.
-│   │   ├── test_build_aggregates_task_integration.py      - Integration tests for aggregate tasks.
-│   │   ├── test_build_candidates_task_integration.py      - Integration tests for candidate tasks.
-│   │   ├── test_build_marts_task_integration.py           - Integration tests for mart-building tasks.
-│   │   ├── test_download_github_archive_integration.py    - Integration tests for GH Archive download service.
-│   │   ├── test_get_archive_task_integration.py           - Integration tests for archive Airflow task wiring.
-│   │   ├── test_github_analysis_dag_integration.py        - Integration tests for DAG structure and dependencies.
-│   │   ├── test_parse_flatten_events_task_integration.py  - Integration tests for flatten task execution.
-│   │   └── test_parse_flatten_service_integration.py      - Integration tests for flattening service behavior.
-│   └── unit/                                              - Fast unit tests for services and tasks.
-│       ├── test_build_aggregates_service.py               - Unit tests for aggregate-building logic.
-│       ├── test_build_candidates_service.py               - Unit tests for candidate scoring and filtering.
-│       ├── test_build_curated_marts_service.py            - Unit tests for curated marts logic.
-│       ├── test_build_dashboard_views_service.py          - Unit tests for dashboard view generation.
-│       ├── test_download_github_archive.py                - Unit tests for archive download behavior.
-│       ├── test_get_archive_task.py                       - Unit tests for the archive Airflow task factory.
-│       ├── test_organization_enrichment_service.py        - Unit tests for organization enrichment.
-│       ├── test_parse_flatten_events_task.py              - Unit tests for the flatten Airflow task factory.
-│       ├── test_parse_flatten_service.py                  - Unit tests for event flattening.
-│       └── test_repository_enrichment_service.py          - Unit tests for repository enrichment.
-└── uv.lock                                                - Locked Python dependency graph for `uv`.
+├── .dlt/                                                  <- Local DLT configuration directory.
+│   └── config.toml                                        <- Base DLT runtime configuration.
+├── .github/                                               <- GitHub automation configuration.
+│   └── workflows/                                         <- CI validation workflows.
+│       ├── dag.yml                                        <- CI for DAG and Python test changes under `dags/` and `tests/`.
+│       ├── helm.yml                                       <- CI for Helm chart linting and template rendering.
+│       └── terraform.yml                                  <- CI for Terraform fmt, tests, and plan.
+├── .env.sample                                            <- Example local environment variables for Airflow and bucket names.
+├── .envrc.sample                                          <- Example `direnv` file for AWS, Terraform, and Python path setup.
+├── .gitignore                                             <- Git ignore rules for local state, credentials, and generated artifacts.
+├── .python-version                                        <- Python version pin for local tooling.
+├── .sqlfluff                                              <- SQLFluff configuration for dashboard SQL files.
+├── Dockerfile                                             <- Airflow runtime image with Spark client binaries copied from the Spark image.
+├── Dockerfile.jupyter                                     <- Local Jupyter/Spark notebook image.
+├── Makefile                                               <- Common local linting, notebook, and utility commands.
+├── README.md                                              <- Project overview, architecture, and local setup.
+├── dags/                                                  <- Airflow DAG definitions and pipeline implementation.
+│   ├── __init__.py                                        <- Marks `dags` as a Python package.
+│   ├── github_analysis.py                                 <- Main hourly batch DAG orchestrating the entire pipeline.
+│   └── gba/                                               <- Application package for services, tasks, and settings.
+│       ├── __init__.py                                    <- Marks the package root.
+│       ├── services/                                      <- Spark jobs and service-layer business logic.
+│       │   ├── __init__.py                                <- Marks services as a package.
+│       │   ├── build_aggregates.py                        <- Computes repository and organization aggregates.
+│       │   ├── build_candidates.py                        <- Scores and filters candidate entities for enrichment.
+│       │   ├── build_curated_marts.py                     <- Builds final curated repository and organization marts.
+│       │   ├── build_dashboard_views.py                   <- Executes SQL-backed dashboard dataset builders.
+│       │   ├── download_github_archive.py                 <- Downloads and uploads hourly GH Archive files.
+│       │   ├── parse_flatten.py                           <- Flattens raw event JSON into structured Parquet.
+│       │   ├── utils.py                                   <- Shared helpers such as `s3://` to `s3a://` conversion.
+│       │   ├── dashboards/                                <- SQL definitions for dashboard datasets.
+│       │   │   ├── common/                                <- Cross-domain dashboards combining repository and organization marts.
+│       │   │   │   ├── language_location.sql              <- Common dashboard by repository language and org location.
+│       │   │   │   ├── rollup.sql                         <- Common rollup dashboard across marts.
+│       │   │   │   └── verified.sql                       <- Common dashboard around verification dimensions.
+│       │   │   ├── organizations/                         <- Organization dashboard SQL definitions.
+│       │   │   │   ├── company.sql                        <- Organization dashboard grouped by company.
+│       │   │   │   ├── location.sql                       <- Organization dashboard grouped by location.
+│       │   │   │   ├── size.sql                           <- Organization size distribution dashboard.
+│       │   │   │   ├── social.sql                         <- Organization social/profile metrics dashboard.
+│       │   │   │   ├── summary.sql                        <- Main organization summary dashboard.
+│       │   │   │   ├── top_100.sql                        <- Top organizations dashboard.
+│       │   │   │   └── verified_distribution.sql          <- Verification-status distribution dashboard.
+│       │   │   └── repositories/                          <- Repository dashboard SQL definitions.
+│       │   │       ├── event_type.sql                     <- Event-type distribution dashboard.
+│       │   │       ├── fork.sql                           <- Fork-status dashboard.
+│       │   │       ├── freshness.sql                      <- Repository freshness dashboard.
+│       │   │       ├── language.sql                       <- Repository language dashboard.
+│       │   │       ├── owner.sql                          <- Repository owner-type dashboard.
+│       │   │       ├── summary.sql                        <- Main repository summary dashboard.
+│       │   │       ├── top_100.sql                        <- Top repositories dashboard.
+│       │   │       └── visibility.sql                     <- Repository visibility dashboard.
+│       │   └── enrichment/                                <- GitHub API enrichment clients and logic.
+│       │       ├── __init__.py                            <- Marks enrichment as a package.
+│       │       ├── client.py                              <- Low-level GitHub API client logic.
+│       │       ├── errors.py                              <- Enrichment-specific exception types.
+│       │       ├── organization.py                        <- Organization enrichment workflow and S3 outputs.
+│       │       └── repository.py                          <- Repository enrichment workflow and S3 outputs.
+│       ├── settings/                                      <- Typed configuration loaders for tasks and services.
+│       │   ├── __init__.py                                <- Marks settings as a package.
+│       │   ├── build_aggregates.py                        <- Settings for aggregate-building tasks.
+│       │   ├── build_candidates.py                        <- Settings for candidate-building tasks.
+│       │   ├── build_curated_marts.py                     <- Settings for marts generation.
+│       │   ├── build_dashboard_views.py                   <- Settings for dashboard generation.
+│       │   ├── enrich_candidates.py                       <- Settings for GitHub enrichment tasks.
+│       │   ├── enums.py                                   <- Shared enums for dashboard and pipeline settings.
+│       │   ├── get_archive.py                             <- Settings for GH Archive downloads.
+│       │   └── parse_flatten.py                           <- Settings for flattening raw events.
+│       └── tasks/                                         <- Airflow task factories wrapping services as operators.
+│           ├── __init__.py                                <- Marks tasks as a package.
+│           ├── build_aggregates.py                        <- Creates SparkSubmitOperator tasks for aggregates.
+│           ├── build_candidates.py                        <- Creates SparkSubmitOperator tasks for candidates.
+│           ├── build_dashboard_views.py                   <- Creates SparkSubmitOperator tasks for dashboards.
+│           ├── build_marts.py                             <- Creates SparkSubmitOperator tasks for curated marts.
+│           ├── enrich_candidates.py                       <- Creates enrichment tasks for GitHub API snapshots.
+│           ├── get_archive.py                             <- Creates the archive download task.
+│           ├── parse_flatten_events.py                    <- Creates the flattening Spark task.
+│           └── spark_conf.py                              <- Shared Spark configuration assembly.
+├── docker-compose.yaml                                    <- Local development stack for Airflow, Spark, Postgres, and Jupyter.
+├── infra/                                                 <- Deployment and infrastructure definitions.
+│   ├── helm/                                              <- Helm chart for Kubernetes deployment.
+│   │   └── github-batch-analytics/                        <- Application chart.
+│   │       ├── Chart.yaml                                 <- Chart metadata.
+│   │       ├── values.yaml                                <- Default chart values for images, buckets, and resources.
+│   │       └── templates/                                 <- Kubernetes manifests rendered by Helm.
+│   │           ├── NOTES.txt                              <- Post-install notes shown by Helm.
+│   │           ├── _helpers.tpl                           <- Shared Helm template helpers.
+│   │           ├── airflow-api-server.yaml                <- Airflow API server deployment and service.
+│   │           ├── airflow-dag-processor.yaml             <- Airflow DAG processor deployment.
+│   │           ├── airflow-init-job.yaml                  <- One-shot Airflow database initialization job.
+│   │           ├── airflow-scheduler.yaml                 <- Airflow scheduler deployment.
+│   │           ├── configmap.yaml                         <- Non-secret runtime environment configuration.
+│   │           ├── secret.yaml                            <- Secret-backed runtime configuration.
+│   │           ├── serviceaccount.yaml                    <- Kubernetes service account with IAM role integration.
+│   │           ├── spark-master.yaml                      <- Spark master deployment and service.
+│   │           └── spark-worker.yaml                      <- Spark worker deployment.
+│   ├── scripts/                                           <- Helper scripts for image and infrastructure deployment.
+│   │   ├── build_and_push_image.sh                        <- Builds and pushes the Airflow application image.
+│   │   ├── deploy_app.sh                                  <- Deploys the application stack to Kubernetes with Helm.
+│   │   └── deploy_infra.sh                                <- Applies infrastructure changes with Terraform.
+│   └── terraform/                                         <- Terraform root module and reusable infrastructure modules.
+│       ├── README.md                                      <- Terraform-specific notes, including remote state bootstrap.
+│       ├── backend.hcl.example                            <- Example backend configuration for remote S3 state.
+│       ├── backend.tf                                     <- Backend block declaration.
+│       ├── github_provider.tf                             <- GitHub provider configuration.
+│       ├── main.tf                                        <- Root module wiring across infrastructure modules.
+│       ├── outputs.tf                                     <- Root outputs for shared infrastructure values.
+│       ├── provider.tf                                    <- AWS provider configuration.
+│       ├── terraform.tfvars.example                       <- Example Terraform variables file.
+│       ├── variables.tf                                   <- Root input variables.
+│       ├── versions.tf                                    <- Terraform and provider version constraints.
+│       ├── modules/                                       <- Reusable infrastructure modules.
+│       │   ├── catalog/                                   <- Athena and Glue warehouse metadata.
+│       │   │   ├── main.tf                                <- Creates Athena workgroup, Glue database, and Glue tables.
+│       │   │   ├── outputs.tf                             <- Exposes catalog resource identifiers.
+│       │   │   └── variables.tf                           <- Inputs for the catalog module.
+│       │   ├── database/                                  <- PostgreSQL infrastructure.
+│       │   │   ├── main.tf                                <- Creates the Airflow RDS database and networking resources.
+│       │   │   ├── outputs.tf                             <- Exposes database connection values.
+│       │   │   └── variables.tf                           <- Inputs for the database module.
+│       │   ├── eks_cluster/                               <- Kubernetes cluster infrastructure.
+│       │   │   ├── main.tf                                <- Creates the EKS cluster and managed node group.
+│       │   │   ├── outputs.tf                             <- Exposes cluster identifiers and access details.
+│       │   │   └── variables.tf                           <- Inputs for the EKS module.
+│       │   ├── github_repo/                               <- GitHub repository variables and secrets.
+│       │   │   ├── main.tf                                <- Creates GitHub Actions variables and secrets.
+│       │   │   ├── variables.tf                           <- Inputs for the GitHub repository module.
+│       │   │   └── versions.tf                            <- Provider version constraints for the GitHub module.
+│       │   ├── identity/                                  <- IAM roles, policies, OIDC, and access control.
+│       │   │   ├── main.tf                                <- Creates IAM resources for runtime and CI/CD access.
+│       │   │   ├── outputs.tf                             <- Exposes IAM role and policy outputs.
+│       │   │   └── variables.tf                           <- Inputs for the identity module.
+│       │   ├── network/                                   <- VPC and subnet topology.
+│       │   │   ├── main.tf                                <- Creates the VPC, subnets, routes, and NAT gateway.
+│       │   │   ├── outputs.tf                             <- Exposes networking identifiers.
+│       │   │   └── variables.tf                           <- Inputs for the network module.
+│       │   ├── registry/                                  <- Container registry resources.
+│       │   │   ├── main.tf                                <- Creates the ECR repository and lifecycle policy.
+│       │   │   ├── outputs.tf                             <- Exposes registry identifiers and URLs.
+│       │   │   └── variables.tf                           <- Inputs for the registry module.
+│       │   └── storage/                                   <- S3 buckets and related access policies.
+│       │       ├── main.tf                                <- Creates landing, bronze, silver, marts, DLT state, and logging buckets.
+│       │       ├── outputs.tf                             <- Exposes bucket names, ARNs, and policy outputs.
+│       │       └── variables.tf                           <- Inputs for the storage module.
+│       └── tests/                                         <- Native Terraform tests executed with `terraform test`.
+│           ├── catalog.tftest.hcl                         <- Tests the catalog module.
+│           ├── database.tftest.hcl                        <- Tests the database module.
+│           ├── github_repo.tftest.hcl                     <- Tests the GitHub repository module.
+│           ├── identity.tftest.hcl                        <- Tests the identity module.
+│           ├── registry.tftest.hcl                        <- Tests the registry module.
+│           └── storage.tftest.hcl                         <- Tests the storage module.
+├── notebooks/                                             <- Exploratory notebooks and Spark helpers.
+│   ├── 3_build_aggregates_org.ipynb                       <- Notebook for organization aggregate exploration.
+│   ├── 3_build_aggregates_repo.ipynb                      <- Notebook for repository aggregate exploration.
+│   ├── 4_build_candidates.ipynb                           <- Notebook for candidate-building experiments.
+│   ├── 6_write_warehouse.ipynb                            <- Notebook for warehouse and Athena-related checks.
+│   ├── README.md                                          <- Notes for notebook usage.
+│   ├── __init__.py                                        <- Marks notebooks helpers as a package.
+│   └── spark_session.py                                   <- Shared Spark session helper for notebooks.
+├── pyproject.toml                                         <- Python project metadata and dependencies.
+├── tests/                                                 <- Unit and integration test suite.
+│   ├── __init__.py                                        <- Marks tests as a package.
+│   ├── conftest.py                                        <- Shared pytest fixtures and test configuration.
+│   ├── integration/                                       <- End-to-end and task-level integration tests.
+│   │   ├── test_build_aggregates_task_integration.py      <- Integration tests for aggregate tasks.
+│   │   ├── test_build_candidates_task_integration.py      <- Integration tests for candidate tasks.
+│   │   ├── test_build_marts_task_integration.py           <- Integration tests for mart-building tasks.
+│   │   ├── test_download_github_archive_integration.py    <- Integration tests for GH Archive download service.
+│   │   ├── test_get_archive_task_integration.py           <- Integration tests for archive Airflow task wiring.
+│   │   ├── test_github_analysis_dag_integration.py        <- Integration tests for DAG structure and dependencies.
+│   │   ├── test_parse_flatten_events_task_integration.py  <- Integration tests for flatten task execution.
+│   │   └── test_parse_flatten_service_integration.py      <- Integration tests for flattening service behavior.
+│   └── unit/                                              <- Fast unit tests for services and tasks.
+│       ├── test_build_aggregates_service.py               <- Unit tests for aggregate-building logic.
+│       ├── test_build_candidates_service.py               <- Unit tests for candidate scoring and filtering.
+│       ├── test_build_curated_marts_service.py            <- Unit tests for curated marts logic.
+│       ├── test_build_dashboard_views_service.py          <- Unit tests for dashboard view generation.
+│       ├── test_download_github_archive.py                <- Unit tests for archive download behavior.
+│       ├── test_get_archive_task.py                       <- Unit tests for the archive Airflow task factory.
+│       ├── test_organization_enrichment_service.py        <- Unit tests for organization enrichment.
+│       ├── test_parse_flatten_events_task.py              <- Unit tests for the flatten Airflow task factory.
+│       ├── test_parse_flatten_service.py                  <- Unit tests for event flattening.
+│       └── test_repository_enrichment_service.py          <- Unit tests for repository enrichment.
+└── uv.lock                                                <- Locked Python dependency graph for `uv`.
 ```
 
 ## 🏛️ Data Warehouse
