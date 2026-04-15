@@ -100,8 +100,9 @@ S3 zones:
 
 ![](./assets/airflow_dag.png)
 
-## Dashboards
+## 📊 Visualization
 
+* [Airflow UI](http://52.29.121.73:8080/)
 * [Streamlit dashboard](https://app-batch-analytics-txp3puizg6e5jq7onsqo6o.streamlit.app/common)
 
 * <details>
