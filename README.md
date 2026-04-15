@@ -102,6 +102,32 @@ S3 zones:
 
 * [Streamlit dashboard](https://app-batch-analytics-txp3puizg6e5jq7onsqo6o.streamlit.app/common)
 
+* <details>
+
+  <summary>Dashboard views</summary>
+
+    ![](./assets/repo_1.png)
+
+    ![](./assets/repo_2.png)
+
+    ![](./assets/repo_3.png)
+
+    ![](./assets/repo_4.png)
+
+    ![](./assets/repo_5.png)
+
+    ![](./assets/org_1.png)
+
+    ![](./assets/org_2.png)
+
+    ![](./assets/org_3.png)
+
+    ![](./assets/common_1.png)
+
+    ![](./assets/common_2.png)
+
+  </details>
+
 ## 🧱 Structure
 
 ```text
