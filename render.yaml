@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install uv && uv sync --frozen --no-dev
-    startCommand: uv run streamlit run dashboards/app.py --server.address 0.0.0.0 --server.port $PORT
+    startCommand: uv run python -m streamlit run dashboards/app.py --server.address 0.0.0.0 --server.port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.6
