@@ -15,6 +15,9 @@ from gba.settings.build_curated_marts import (
 )
 from gba.settings.parse_flatten import get_parse_flatten_settings
 from gba.settings.get_archive import get_download_archive_settings
+from gba.settings.materialize_bucketed_marts import (
+    get_materialize_bucketed_marts_settings,
+)
 
 DAG_ID = "github_batch_analysis"
 DAG_FILE = Path(__file__).resolve().parents[2] / "dags" / "github_analysis.py"
@@ -28,6 +31,9 @@ TEST_ENV = {
     "AWS_SHARED_CREDENTIALS_FILE": "/tmp/aws/credentials",
     "CANDIDATES_SIZE": "25",
     "S3_MARTS_BUCKET_NAME": "test-marts",
+    "ATHENA_DATABASE_NAME": "github_analytics",
+    "ATHENA_WORKGROUP_NAME": "github-batch-analytics",
+    "ATHENA_QUERY_RESULTS_BUCKET_NAME": "test-athena-results",
 }
 
 
@@ -39,6 +45,7 @@ def dagbag() -> DagBag:
         get_build_aggregates_settings.cache_clear()
         get_build_candidates_settings.cache_clear()
         get_build_marts_settings.cache_clear()
+        get_materialize_bucketed_marts_settings.cache_clear()
         return DagBag(dag_folder=str(DAG_FILE), include_examples=False)
 
 
@@ -72,6 +79,12 @@ class TestGithubAnalysisDag:
             "enrich_org_candidates",
             "build_repo_marts",
             "build_org_marts",
+            "materialize_repo_bucketed_marts.submit_ctas",
+            "materialize_repo_bucketed_marts.wait_for_ctas",
+            "materialize_repo_bucketed_marts.drop_temp_table",
+            "materialize_org_bucketed_marts.submit_ctas",
+            "materialize_org_bucketed_marts.wait_for_ctas",
+            "materialize_org_bucketed_marts.drop_temp_table",
             "repository_dashboards.build_repo_dashboard_summary",
             "repository_dashboards.build_repo_dashboard_language",
             "organization_dashboards.build_org_dashboard_summary",
@@ -97,6 +110,24 @@ class TestGithubAnalysisDag:
         enrich_org = dag.task_dict["enrich_org_candidates"]
         build_repo_marts = dag.task_dict["build_repo_marts"]
         build_org_marts = dag.task_dict["build_org_marts"]
+        materialize_repo_submit = dag.task_dict[
+            "materialize_repo_bucketed_marts.submit_ctas"
+        ]
+        materialize_repo_wait = dag.task_dict[
+            "materialize_repo_bucketed_marts.wait_for_ctas"
+        ]
+        materialize_repo_drop = dag.task_dict[
+            "materialize_repo_bucketed_marts.drop_temp_table"
+        ]
+        materialize_org_submit = dag.task_dict[
+            "materialize_org_bucketed_marts.submit_ctas"
+        ]
+        materialize_org_wait = dag.task_dict[
+            "materialize_org_bucketed_marts.wait_for_ctas"
+        ]
+        materialize_org_drop = dag.task_dict[
+            "materialize_org_bucketed_marts.drop_temp_table"
+        ]
         repo_summary = dag.task_dict[
             "repository_dashboards.build_repo_dashboard_summary"
         ]
@@ -134,29 +165,69 @@ class TestGithubAnalysisDag:
         assert enrich_org.downstream_task_ids == {"build_org_marts"}
         assert build_repo_marts.upstream_task_ids == {"enrich_repo_candidates"}
         assert build_repo_marts.downstream_task_ids == {
+            "materialize_repo_bucketed_marts.submit_ctas",
+        }
+        assert build_org_marts.upstream_task_ids == {"enrich_org_candidates"}
+        assert build_org_marts.downstream_task_ids == {
+            "materialize_org_bucketed_marts.submit_ctas",
+        }
+        assert materialize_repo_submit.upstream_task_ids == {"build_repo_marts"}
+        assert materialize_repo_submit.downstream_task_ids == {
+            "materialize_repo_bucketed_marts.wait_for_ctas",
+        }
+        assert materialize_repo_wait.upstream_task_ids == {
+            "materialize_repo_bucketed_marts.submit_ctas",
+        }
+        assert materialize_repo_wait.downstream_task_ids == {
+            "materialize_repo_bucketed_marts.drop_temp_table",
+        }
+        assert materialize_repo_drop.upstream_task_ids == {
+            "materialize_repo_bucketed_marts.wait_for_ctas",
+        }
+        assert materialize_repo_drop.downstream_task_ids == {
             "common_dashboards.build_common_dashboard_rollup",
             "common_dashboards.build_common_dashboard_language_location",
             "repository_dashboards.build_repo_dashboard_summary",
             "repository_dashboards.build_repo_dashboard_language",
         }
-        assert build_org_marts.upstream_task_ids == {"enrich_org_candidates"}
-        assert build_org_marts.downstream_task_ids == {
+        assert materialize_org_submit.upstream_task_ids == {"build_org_marts"}
+        assert materialize_org_submit.downstream_task_ids == {
+            "materialize_org_bucketed_marts.wait_for_ctas",
+        }
+        assert materialize_org_wait.upstream_task_ids == {
+            "materialize_org_bucketed_marts.submit_ctas",
+        }
+        assert materialize_org_wait.downstream_task_ids == {
+            "materialize_org_bucketed_marts.drop_temp_table",
+        }
+        assert materialize_org_drop.upstream_task_ids == {
+            "materialize_org_bucketed_marts.wait_for_ctas",
+        }
+        assert materialize_org_drop.downstream_task_ids == {
             "common_dashboards.build_common_dashboard_rollup",
             "common_dashboards.build_common_dashboard_language_location",
             "organization_dashboards.build_org_dashboard_summary",
             "organization_dashboards.build_org_dashboard_top_100",
         }
-        assert repo_summary.upstream_task_ids == {"build_repo_marts"}
-        assert repo_language.upstream_task_ids == {"build_repo_marts"}
-        assert org_summary.upstream_task_ids == {"build_org_marts"}
-        assert org_top_100.upstream_task_ids == {"build_org_marts"}
+        assert repo_summary.upstream_task_ids == {
+            "materialize_repo_bucketed_marts.drop_temp_table"
+        }
+        assert repo_language.upstream_task_ids == {
+            "materialize_repo_bucketed_marts.drop_temp_table"
+        }
+        assert org_summary.upstream_task_ids == {
+            "materialize_org_bucketed_marts.drop_temp_table"
+        }
+        assert org_top_100.upstream_task_ids == {
+            "materialize_org_bucketed_marts.drop_temp_table"
+        }
         assert common_rollup.upstream_task_ids == {
-            "build_repo_marts",
-            "build_org_marts",
+            "materialize_repo_bucketed_marts.drop_temp_table",
+            "materialize_org_bucketed_marts.drop_temp_table",
         }
         assert common_language_location.upstream_task_ids == {
-            "build_repo_marts",
-            "build_org_marts",
+            "materialize_repo_bucketed_marts.drop_temp_table",
+            "materialize_org_bucketed_marts.drop_temp_table",
         }
 
     def test_parse_flatten_task_configuration(self, dag):
@@ -228,5 +299,6 @@ class TestGithubAnalysisDag:
             get_build_aggregates_settings.cache_clear()
             get_build_candidates_settings.cache_clear()
             get_build_marts_settings.cache_clear()
+            get_materialize_bucketed_marts_settings.cache_clear()
             dagbag = DagBag(dag_folder="dags", include_examples=False)
         assert dagbag.import_errors == {}
