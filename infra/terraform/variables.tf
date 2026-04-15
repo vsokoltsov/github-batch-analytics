@@ -142,6 +142,12 @@ variable "github_actions_role_name" {
   default     = "github-actions-ecr-push"
 }
 
+variable "streamlit_iam_user_name" {
+  description = "IAM user name used by the public Streamlit dashboard."
+  type        = string
+  default     = "github-batch-analytics-streamlit"
+}
+
 variable "dlt_state_access_role_names" {
   description = "IAM role names that should receive the managed policy for the dlt state bucket."
   type        = list(string)

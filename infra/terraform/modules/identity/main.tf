@@ -82,9 +82,18 @@ data "aws_iam_policy_document" "airflow_runtime" {
       "athena:GetQueryResults",
       "athena:GetWorkGroup",
       "athena:StartQueryExecution",
+      "glue:BatchCreatePartition",
+      "glue:BatchDeletePartition",
+      "glue:CreateTable",
+      "glue:CreatePartition",
+      "glue:DeletePartition",
       "glue:GetDatabase",
+      "glue:GetPartition",
+      "glue:GetPartitions",
       "glue:GetTable",
       "glue:GetTables",
+      "glue:DeleteTable",
+      "glue:UpdateTable",
     ]
     resources = ["*"]
   }
@@ -133,6 +142,7 @@ data "aws_iam_policy_document" "github_actions_assume_role" {
       variable = "token.actions.githubusercontent.com:sub"
       values = [
         "repo:${var.github_owner}/${var.github_repository}:ref:refs/heads/${var.github_actions_branch}",
+        "repo:${var.github_owner}/${var.github_repository}:environment:production",
       ]
     }
   }

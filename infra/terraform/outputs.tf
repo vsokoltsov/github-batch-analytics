@@ -173,3 +173,25 @@ output "airflow_db_password" {
   value       = module.database.password
   sensitive   = true
 }
+
+output "streamlit_iam_user_name" {
+  description = "IAM user name used by the public Streamlit dashboard."
+  value       = module.streamlit_access.streamlit_iam_user_name
+}
+
+output "streamlit_iam_user_arn" {
+  description = "IAM user ARN used by the public Streamlit dashboard."
+  value       = module.streamlit_access.streamlit_iam_user_arn
+}
+
+output "streamlit_access_key_id" {
+  description = "Access key ID for the Streamlit dashboard IAM user."
+  value       = module.streamlit_access.streamlit_access_key_id
+  sensitive   = true
+}
+
+output "streamlit_secret_access_key" {
+  description = "Secret access key for the Streamlit dashboard IAM user."
+  value       = module.streamlit_access.streamlit_secret_access_key
+  sensitive   = true
+}

@@ -133,3 +133,12 @@ module "github_repo" {
   logging_bucket_name              = module.storage.logging_bucket_name
   terraform_state_bucket_name      = var.terraform_state_bucket_name
 }
+
+module "streamlit_access" {
+  source = "./modules/streamlit_access"
+
+  streamlit_iam_user_name         = var.streamlit_iam_user_name
+  marts_bucket_arn                = module.storage.marts_bucket_arn
+  athena_query_results_bucket_arn = module.catalog.athena_query_results_bucket_arn
+  tags                            = var.tags
+}
