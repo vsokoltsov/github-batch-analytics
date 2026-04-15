@@ -19,7 +19,7 @@ def build_repo_marts(
 ) -> BuildMartsEvent:
     settings = get_build_candidates_settings()
     output_path = (
-        f"s3a://{settings.S3_MARTS_BUCKET_NAME}/repositories/dt={dt}/hr={hour}/"
+        f"s3a://{settings.S3_MARTS_BUCKET_NAME}/repositories_stage/dt={dt}/hr={hour}/"
     )
 
     task = SparkSubmitOperator(
@@ -59,7 +59,7 @@ def build_org_marts(
 ) -> BuildMartsEvent:
     settings = get_build_candidates_settings()
     output_path = (
-        f"s3a://{settings.S3_MARTS_BUCKET_NAME}/organizations/dt={dt}/hr={hour}/"
+        f"s3a://{settings.S3_MARTS_BUCKET_NAME}/organizations_stage/dt={dt}/hr={hour}/"
     )
 
     task = SparkSubmitOperator(
