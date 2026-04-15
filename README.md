@@ -369,18 +369,108 @@ This is a deliberate tradeoff. The pipeline keeps Spark writes simple and determ
 
 ### 1. Prepare configuration
 
-Create local environment files if they do not exist:
+Create local files from every checked-in sample file:
 
 ```bash
 cp .env.sample .env
+cp .env.spark.sample .env.spark
 cp .envrc.sample .envrc
 ```
 
-Populate the local secrets and credentials:
+Populate the generated files before starting the stack:
+
+- [`.env.sample`](.env.sample) -> [`.env`](.env)
+  - local Airflow settings
+  - Postgres credentials
+  - local Spark/Athena integration variables
+  - bucket names and dashboard/Athena settings
+- [`.envrc.sample`](.envrc.sample) -> [`.envrc`](.envrc)
+  - local shell exports for AWS CLI/Terraform/Python tooling
+  - project-local `AWS_CONFIG_FILE` and `AWS_SHARED_CREDENTIALS_FILE`
+  - `PYTHONPATH` for local development
+- [`.env.spark.sample`](.env.spark.sample) -> [`.env.spark`](.env.spark)
+  - Spark-specific environment variables loaded by Docker Compose services
+  - currently used for values such as `SPARK_MASTER_URL`
+
+Also prepare the runtime secrets that are intentionally not stored as sample files:
 
 - put AWS config and credentials under `.local/aws/`
-- populate `.dlt/secrets.toml`
+- create and populate [`.dlt/secrets.toml`](.dlt/secrets.toml)
+  - used by the local `dlt` runtime for filesystem / state / destination credentials
+  - keep it local only; it is intentionally ignored by git
+- create and populate [`.streamlit/secrets.toml`](.streamlit/secrets.toml) if you want to run the dashboard with Streamlit-managed secrets instead of shell environment variables
+  - used by the Streamlit dashboard to read AWS and Athena settings through `st.secrets`
+  - this is especially useful when matching the hosted Streamlit Community Cloud setup locally
 - set `TF_VAR_github_token` in `.envrc` if you work with Terraform and GitHub resources locally
+
+Related local-only configuration files:
+
+- [`.local/aws/config`](.local/aws/config)
+  - shared AWS CLI and SDK config used by local Docker services and `direnv`
+- [`.local/aws/credentials`](.local/aws/credentials)
+  - local AWS credential profiles such as `gba-admin`
+- [`.streamlit/config.toml`](.streamlit/config.toml)
+  - local Streamlit server configuration used by the dashboard app
+
+Values that are now sourced from [`.env`](.env) for Docker Compose instead of being hardcoded in [`docker-compose.yaml`](docker-compose.yaml):
+
+- `AIRFLOW_CONN_SPARK_DEFAULT`
+- `AIRFLOW_AWS_CONFIG_FILE`
+- `AIRFLOW_AWS_SHARED_CREDENTIALS_FILE`
+- `SPARK_AWS_CONFIG_FILE`
+- `SPARK_AWS_SHARED_CREDENTIALS_FILE`
+- `AWS_PROFILE`
+- `SPARK_MASTER_URL`
+- `DLT_DATA_DIR`
+- `DLT_TELEMETRY`
+- `RUNTIME__DLTHUB_TELEMETRY`
+- `ENABLE_RUNTIME_TRACE`
+
+`direnv` is optional but strongly recommended for local work.
+
+What it is:
+
+- `direnv` is a shell extension that automatically loads environment variables when you enter a directory and unloads them when you leave it
+- in this project it prevents repeated manual `export ...` steps for AWS, Terraform, and Python settings
+- it keeps the repo-local settings scoped to this repository instead of polluting the rest of your shell session
+
+How it helps here:
+
+- automatically points AWS CLI, Terraform, and boto3 to `.local/aws/config` and `.local/aws/credentials`
+- exports `AWS_PROFILE`, `AWS_REGION`, and Terraform variables for this repo shell
+- adds the repo paths needed for local Python execution
+
+How to install:
+
+- macOS with Homebrew:
+  ```bash
+  brew install direnv
+  ```
+- Ubuntu/Debian:
+  ```bash
+  sudo apt-get update && sudo apt-get install -y direnv
+  ```
+
+How to enable it in your shell:
+
+- for `zsh`, add this line to `~/.zshrc`:
+  ```bash
+  eval "$(direnv hook zsh)"
+  ```
+- reload the shell:
+  ```bash
+  source ~/.zshrc
+  ```
+
+How to use it in this repo:
+
+- copy `.envrc.sample` to `.envrc`
+- edit `.envrc` with your local values
+- allow it once:
+  ```bash
+  direnv allow
+  ```
+- after that, every `cd` into the repository root will load the exports automatically
 
 If you use `direnv`, load the environment:
 
@@ -399,6 +489,37 @@ uv sync --dev
 ```bash
 docker compose up --build
 ```
+
+This starts:
+
+- Postgres
+- Airflow services
+- Spark master and worker
+- Jupyter notebook
+- Streamlit dashboard on `http://localhost:8501`
+
+If you only want the dashboard container instead of the full stack:
+
+```bash
+docker compose up --build streamlit-dashboard
+```
+
+You can also run the dashboard directly on the host without Docker:
+
+```bash
+uv run streamlit run dashboards/app.py
+```
+
+The direct host run uses:
+
+- environment variables from your current shell or `direnv`
+- optionally [`.streamlit/secrets.toml`](.streamlit/secrets.toml) if you prefer `st.secrets`
+
+The Docker Compose dashboard uses:
+
+- [`.env`](.env) for Athena-related settings
+- mounted AWS files from [`.local/aws/`](./.local/aws/)
+- the `gba-admin` AWS profile exposed inside the container
 
 This starts:
 
