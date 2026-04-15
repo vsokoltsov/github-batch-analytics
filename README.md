@@ -1,5 +1,27 @@
 # GitHub Batch Analytics
 
+[![DAG](https://github.com/vsokoltsov/github-batch-analytics/actions/workflows/dag.yml/badge.svg?branch=main)](https://github.com/vsokoltsov/github-batch-analytics/actions/workflows/dag.yml)
+[![Terraform](https://github.com/vsokoltsov/github-batch-analytics/actions/workflows/terraform.yml/badge.svg)](https://github.com/vsokoltsov/github-batch-analytics/actions/workflows/terraform.yml)
+[![Helm](https://github.com/vsokoltsov/github-batch-analytics/actions/workflows/helm.yml/badge.svg)](https://github.com/vsokoltsov/github-batch-analytics/actions/workflows/helm.yml)
+
+![](./assets/gba_cover.png)
+
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![uv](https://img.shields.io/badge/uv-managed%20deps-DE5FE9?logo=uv&logoColor=white)
+![Apache Airflow](https://img.shields.io/badge/Apache%20Airflow-3.0.0-017CEE?logo=apacheairflow&logoColor=white)
+![Apache Spark](https://img.shields.io/badge/Apache%20Spark-3.5.4-E25A1C?logo=apachespark&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Amazon S3](https://img.shields.io/badge/Amazon%20S3-Data%20Lake-569A31?logo=amazons3&logoColor=white)
+![Amazon Athena](https://img.shields.io/badge/Amazon%20Athena-Warehouse-6F2DA8?logo=amazonaws&logoColor=white)
+![AWS Glue](https://img.shields.io/badge/AWS%20Glue-Catalog-FF9900?logo=amazonaws&logoColor=white)
+![Amazon QuickSight](https://img.shields.io/badge/Amazon%20QuickSight-Dashboards-00A1C9?logo=amazonaws&logoColor=white)
+![Amazon EKS](https://img.shields.io/badge/Amazon%20EKS-Kubernetes-FF9900?logo=amazoneks&logoColor=white)
+![Helm](https://img.shields.io/badge/Helm-Deployment-0F1689?logo=helm&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-844FBA?logo=terraform&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Local%20Stack-2496ED?logo=docker&logoColor=white)
+
+
+
 ## 🎯 Objective
 
 Build a production-oriented batch analytics platform for GitHub public activity that can:
