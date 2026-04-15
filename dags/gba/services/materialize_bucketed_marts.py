@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from pathlib import Path
 
 import boto3
 
+_TRANSFORMATIONS_DIR = Path(__file__).resolve().parent / "transformations"
 
 @dataclass(frozen=True)
 class BucketedMartConfig:
@@ -88,25 +90,18 @@ def build_bucketed_ctas_query(
     select_columns: list[str],
 ) -> str:
     projection = ",\n        ".join(select_columns)
-    return f"""
-CREATE TABLE "{config.database_name}"."{temp_table_name}"
-WITH (
-    format = 'PARQUET',
-    external_location = '{config.table_root_location}',
-    parquet_compression = 'SNAPPY',
-    partitioned_by = ARRAY['dt', 'hr'],
-    bucketed_by = ARRAY['{config.bucket_column}'],
-    bucket_count = {config.bucket_count}
-)
-AS
-SELECT
-        {projection},
-        DATE '{config.dt}' AS dt,
-        {int(config.hr)} AS hr
-FROM "{config.database_name}"."{config.source_stage_table_name}"
-WHERE dt = DATE '{config.dt}'
-  AND hr = {int(config.hr)}
-""".strip()
+    template = (_TRANSFORMATIONS_DIR / "bucketed_mart_ctas.sql").read_text()
+    return template.format(
+        database_name=config.database_name,
+        temp_table_name=temp_table_name,
+        table_root_location=config.table_root_location,
+        bucket_column=config.bucket_column,
+        bucket_count=config.bucket_count,
+        projection=projection,
+        dt=config.dt,
+        hr=int(config.hr),
+        source_stage_table_name=config.source_stage_table_name,
+    ).strip()
 
 
 def build_drop_table_query(database_name: str, temp_table_name: str) -> str:
