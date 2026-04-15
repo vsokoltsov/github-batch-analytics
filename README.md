@@ -48,6 +48,8 @@ This project solves that by orchestrating an hourly Airflow DAG that runs Spark 
 
 ## 🔄 Data Pipeline
 
+![](./assets/gba_infographic.png)
+
 The main DAG is [`github_analysis.py`](./dags/github_analysis.py). It runs every hour at `HH:05`.
 
 This is a batching flow:
