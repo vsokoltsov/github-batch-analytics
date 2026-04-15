@@ -113,3 +113,15 @@ spark:
     coresMax: 2
     executorCores: 1
     executorMemory: 1g
+
+cleanup:
+  failedSparkWorkers:
+    enabled: true
+    schedule: "*/30 * * * *"
+    successfulJobsHistoryLimit: 1
+    failedJobsHistoryLimit: 3
+    ttlSecondsAfterFinished: 300
+    image:
+      repository: "bitnami/kubectl"
+      tag: "1.31.13"
+      pullPolicy: IfNotPresent

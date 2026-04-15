@@ -25,3 +25,7 @@ helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" }}
 {{- .Values.serviceAccount.name -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "github-batch-analytics.cleanupServiceAccountName" -}}
+{{- printf "%s-cleanup" (include "github-batch-analytics.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
