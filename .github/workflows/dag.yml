@@ -5,6 +5,7 @@ on:
     paths:
       - "dags/**"
       - "tests/**"
+      - ".github/workflows/dag.yml"
   pull_request:
     paths:
       - "dags/**"
