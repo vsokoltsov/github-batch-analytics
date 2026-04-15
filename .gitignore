@@ -27,5 +27,6 @@ vendored/
 .pytest_cache/
 .ruff_cache/
 .dlt/secrets.toml
+.streamlit/secrets.toml
 .DS_Store
 .Trash-*/
