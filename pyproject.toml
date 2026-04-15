@@ -15,6 +15,7 @@ dependencies = [
     "s3fs>=2026.2.0",
     "pyarrow>=22.0.0",
     "pandas>=2.3.3",
+    "plotly>=6.3.1",
     "PyAthena>=3.22.0",
     "streamlit>=1.50.0",
 ]
