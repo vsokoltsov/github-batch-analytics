@@ -1,3 +1,6 @@
+-- Warehouse note: source marts are partitioned by dt and hr in Athena.
+-- Repositories are bucketed by repo_id and organizations are bucketed by org_id before dashboard queries run.
+
 select
     coalesce(r.language, 'Unknown') as language, -- noqa: RF04
     coalesce(o.location, 'Unknown') as org_location,

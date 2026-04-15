@@ -1,3 +1,6 @@
+-- Warehouse note: source marts are partitioned by dt and hr in Athena.
+-- Repositories are bucketed by repo_id and organizations are bucketed by org_id before dashboard queries run.
+
 select
     case
         when twitter_username is not null then 'has_twitter' else 'no_twitter'
