@@ -123,3 +123,48 @@ def load_organization_summary(start_date: str, end_date: str) -> pd.DataFrame:
     dataframe["location"] = dataframe["location"].fillna("Unknown")
     dataframe["company"] = dataframe["company"].fillna("Unknown")
     return dataframe
+
+
+@lru_cache(maxsize=1)
+def load_common_summary() -> pd.DataFrame:
+    config, connection = _connect_to_athena()
+
+    query = f"""
+    SELECT
+        repo_id,
+        repo_full_name,
+        repo_name,
+        owner_login,
+        language,
+        repo_total_events,
+        repo_avg_composite_score,
+        stargazers_count,
+        org_id,
+        org_name,
+        org_location,
+        org_company,
+        org_followers,
+        org_public_repos,
+        org_is_verified
+    FROM "{config["athena_database_name"]}"."{config["athena_common_summary_table_name"]}"
+    """
+    dataframe = pd.read_sql(query, connection)
+    dataframe["repo_full_name"] = dataframe["repo_full_name"].fillna(
+        "Unknown repository"
+    )
+    dataframe["repo_name"] = dataframe["repo_name"].fillna("Unknown repository")
+    dataframe["owner_login"] = dataframe["owner_login"].fillna("Unknown owner")
+    dataframe["language"] = dataframe["language"].fillna("Unknown")
+    dataframe["org_name"] = dataframe["org_name"].fillna("Independent owner")
+    dataframe["org_location"] = dataframe["org_location"].fillna("Unknown")
+    dataframe["org_company"] = dataframe["org_company"].fillna("Unknown")
+    dataframe["org_is_verified"] = dataframe["org_is_verified"].fillna(False)
+    for column in [
+        "repo_total_events",
+        "repo_avg_composite_score",
+        "stargazers_count",
+        "org_followers",
+        "org_public_repos",
+    ]:
+        dataframe[column] = pd.to_numeric(dataframe[column], errors="coerce").fillna(0)
+    return dataframe

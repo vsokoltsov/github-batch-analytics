@@ -65,11 +65,27 @@ def render_dashboard(dataframe: pd.DataFrame, top_n: int) -> None:
         .sum()
         .sort_values("total_events", ascending=False)
     )
+    verification_distribution = (
+        dataframe.assign(
+            verification_status=dataframe["is_verified"].map(
+                {True: "Verified", False: "Not Verified"}
+            )
+        )
+        .groupby("verification_status", as_index=False)["total_events"]
+        .sum()
+        .sort_values("total_events", ascending=False)
+    )
     timeline = (
         dataframe.groupby("timestamp", as_index=False)[
-            ["total_events", "push_events", "pull_request_events"]
+            ["total_events", "avg_bot_ratio", "avg_composite_score"]
         ]
-        .sum()
+        .agg(
+            {
+                "total_events": "sum",
+                "avg_bot_ratio": "mean",
+                "avg_composite_score": "mean",
+            }
+        )
         .sort_values("timestamp")
     )
 
@@ -87,11 +103,25 @@ def render_dashboard(dataframe: pd.DataFrame, top_n: int) -> None:
 
     st.subheader("Organization Location Distribution by Total Events")
     st.plotly_chart(
-        px.treemap(
+        px.bar(
             location_distribution,
-            path=["location"],
-            values="total_events",
+            x="location",
+            y="total_events",
             title="Organization location distribution by total events",
+            labels={"location": "Location", "total_events": "Total events"},
+            log_y=True,
+        ),
+        use_container_width=True,
+    )
+
+    st.subheader("Verified vs Non-Verified Organization Activity")
+    st.plotly_chart(
+        px.pie(
+            verification_distribution,
+            names="verification_status",
+            values="total_events",
+            title="Share of total events by verification status",
+            hole=0.45,
         ),
         use_container_width=True,
     )
@@ -103,37 +133,40 @@ def render_dashboard(dataframe: pd.DataFrame, top_n: int) -> None:
             x="timestamp",
             y="total_events",
             title="Total GitHub events over time",
-            labels={"timestamp": "Time", "total_events": "Total events"},
+            labels={
+                "timestamp": "Time",
+                "total_events": "Total events",
+            },
             markers=True,
         ),
         use_container_width=True,
     )
 
-    push_vs_pr = timeline.melt(
+    organization_quality = timeline.melt(
         id_vars=["timestamp"],
-        value_vars=["push_events", "pull_request_events"],
-        var_name="event_type",
-        value_name="events",
+        value_vars=["avg_bot_ratio", "avg_composite_score"],
+        var_name="metric",
+        value_name="value",
     )
-    push_vs_pr["event_type"] = push_vs_pr["event_type"].map(
+    organization_quality["metric"] = organization_quality["metric"].map(
         {
-            "push_events": "Push Events",
-            "pull_request_events": "Pull Request Events",
+            "avg_bot_ratio": "Average Bot Ratio",
+            "avg_composite_score": "Average Composite Score",
         }
     )
 
-    st.subheader("Push vs Pull Request Events Over Time")
+    st.subheader("Organization Quality Metrics Over Time")
     st.plotly_chart(
         px.line(
-            push_vs_pr,
+            organization_quality,
             x="timestamp",
-            y="events",
-            color="event_type",
-            title="Push versus pull request events over time",
+            y="value",
+            color="metric",
+            title="Average bot ratio and composite score over time",
             labels={
                 "timestamp": "Time",
-                "events": "Events",
-                "event_type": "Event type",
+                "value": "Metric value",
+                "metric": "Metric",
             },
             markers=True,
         ),
