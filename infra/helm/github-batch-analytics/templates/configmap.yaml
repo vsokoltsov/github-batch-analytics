@@ -20,6 +20,13 @@ data:
   S3_SILVER_ZONE_BUCKET_NAME: {{ .Values.airflow.buckets.silverZone | quote }}
   S3_MARTS_BUCKET_NAME: {{ .Values.airflow.buckets.marts | quote }}
   S3_DLT_STATE_BUCKET_NAME: {{ .Values.airflow.buckets.dltState | quote }}
+  ATHENA_DATABASE_NAME: {{ .Values.airflow.athena.database | quote }}
+  ATHENA_WORKGROUP_NAME: {{ .Values.airflow.athena.workgroup | quote }}
+  ATHENA_QUERY_RESULTS_BUCKET_NAME: {{ .Values.airflow.athena.queryResultsBucket | quote }}
+  ATHENA_REPOSITORY_TABLE_NAME: {{ .Values.airflow.athena.repositoryTable | quote }}
+  ATHENA_ORGANIZATION_TABLE_NAME: {{ .Values.airflow.athena.organizationTable | quote }}
+  ATHENA_REPOSITORY_BUCKET_COUNT: {{ .Values.airflow.athena.repositoryBucketCount | quote }}
+  ATHENA_ORGANIZATION_BUCKET_COUNT: {{ .Values.airflow.athena.organizationBucketCount | quote }}
   CANDIDATES_SIZE: {{ .Values.airflow.candidatesSize | quote }}
   SPARK_MASTER_URL: 'spark://{{ include "github-batch-analytics.fullname" . }}-spark-master:7077'
   SPARK_CORES_MAX: {{ .Values.spark.job.coresMax | quote }}

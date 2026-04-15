@@ -41,6 +41,14 @@ airflow:
     marts: ""
     dltState: ""
     logging: ""
+  athena:
+    database: ""
+    workgroup: ""
+    queryResultsBucket: ""
+    repositoryTable: "repositories"
+    organizationTable: "organizations"
+    repositoryBucketCount: 16
+    organizationBucketCount: 8
   candidatesSize: 25
   dlt:
     githubToken: ""
