@@ -308,7 +308,10 @@ Current warehouse design:
 
 - Glue database: `github_analytics`
 - Athena workgroup: `github-batch-analytics`
-- core mart tables:
+- stage mart tables written directly by Spark:
+  - `repositories_stage`
+  - `organizations_stage`
+- final mart tables materialized by Athena CTAS:
   - `repositories`
   - `organizations`
 - dashboard tables:
@@ -316,9 +319,10 @@ Current warehouse design:
   - organization dashboards under `dashboards/organizations/...`
   - common dashboards under `dashboards/common/...`
 - BI consumption path:
-  - Spark writes Parquet to S3
-  - Glue Catalog exposes the datasets to Athena
-  - Athena provides the SQL layer
+  - Spark writes stage marts to S3
+  - Athena CTAS rewrites the core mart tables into their final warehouse layout
+  - Glue Catalog exposes both the stage and final datasets to Athena
+  - Athena provides the SQL layer for marts and dashboard-ready tables
   - Streamlit can use Athena datasets as the dashboard source
 
 Partitioning strategy:
@@ -327,6 +331,8 @@ Partitioning strategy:
   - `dt` as the batch date
   - `hr` as the batch hour
 - physical S3 layout follows the same contract, for example:
+  - `s3://<marts-bucket>/repositories_stage/dt=YYYY-MM-DD/hr=H/`
+  - `s3://<marts-bucket>/organizations_stage/dt=YYYY-MM-DD/hr=H/`
   - `s3://<marts-bucket>/repositories/dt=YYYY-MM-DD/hr=H/`
   - `s3://<marts-bucket>/organizations/dt=YYYY-MM-DD/hr=H/`
   - `s3://<marts-bucket>/dashboards/.../dt=YYYY-MM-DD/hr=H/`
@@ -335,13 +341,21 @@ Partitioning strategy:
 Clustering and file layout:
 
 - Parquet is used as the storage format for marts and dashboard datasets
-- there is no explicit Athena bucketing or clustering configured in the Glue tables
-- performance comes primarily from:
+- the final core mart tables are explicitly bucketed in Athena:
+  - `repositories` is bucketed by `repo_id`
+  - `organizations` is bucketed by `org_id`
+- this bucketing is not produced by the original Spark path write directly
+  - Spark first writes the hourly stage tables
+  - an Airflow `TaskGroup` submits Athena CTAS statements that rewrite those hourly slices into the final bucketed tables
+  - temporary CTAS tables are dropped after materialization completes
+- dashboard tables remain partitioned Athena/Glue tables without additional bucketing
+- performance therefore comes from:
   - partition pruning on `dt` and `hr`
   - Parquet column pruning
+  - bucketed file layout on the core repository and organization marts
   - smaller dashboard-specific datasets written for downstream reporting
 
-This is a deliberate tradeoff. For hourly batch analytics, partitioned Parquet on S3 plus Athena is simpler and cheaper than operating a dedicated warehouse, and it is a natural fit for Streamlit dashboards built over time-partitioned analytical tables.
+This is a deliberate tradeoff. The pipeline keeps Spark writes simple and deterministic, then lets Athena perform the warehouse-oriented bucketing step only where it is valuable. That keeps the hourly batch flow operationally straightforward while still giving the two core mart tables a more query-efficient layout for downstream analytical use.
 
 ## 🛠️ Local Setup
 
