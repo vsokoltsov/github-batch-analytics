@@ -8,6 +8,7 @@ import boto3
 
 _TRANSFORMATIONS_DIR = Path(__file__).resolve().parent / "transformations"
 
+
 @dataclass(frozen=True)
 class BucketedMartConfig:
     database_name: str
