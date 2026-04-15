@@ -135,6 +135,13 @@ jobs:
       AIRFLOW_DB_PORT: ${{ vars.AIRFLOW_DB_PORT || '5432' }}
       AIRFLOW_DB_NAME: ${{ vars.AIRFLOW_DB_NAME || 'airflow' }}
       AIRFLOW_DB_USERNAME: ${{ vars.AIRFLOW_DB_USERNAME || 'airflow' }}
+      ATHENA_DATABASE_NAME: ${{ vars.ATHENA_DATABASE_NAME || 'github_analytics' }}
+      ATHENA_WORKGROUP_NAME: ${{ vars.ATHENA_WORKGROUP_NAME || 'github-batch-analytics' }}
+      ATHENA_QUERY_RESULTS_BUCKET_NAME: ${{ vars.ATHENA_QUERY_RESULTS_BUCKET_NAME }}
+      ATHENA_REPOSITORY_TABLE_NAME: ${{ vars.ATHENA_REPOSITORY_TABLE_NAME || 'repositories' }}
+      ATHENA_ORGANIZATION_TABLE_NAME: ${{ vars.ATHENA_ORGANIZATION_TABLE_NAME || 'organizations' }}
+      ATHENA_REPOSITORY_BUCKET_COUNT: ${{ vars.ATHENA_REPOSITORY_BUCKET_COUNT || '16' }}
+      ATHENA_ORGANIZATION_BUCKET_COUNT: ${{ vars.ATHENA_ORGANIZATION_BUCKET_COUNT || '8' }}
       LANDING_ZONE_BUCKET_NAME: ${{ vars.LANDING_ZONE_BUCKET_NAME }}
       BRONZE_ZONE_BUCKET_NAME: ${{ vars.BRONZE_ZONE_BUCKET_NAME }}
       SILVER_ZONE_BUCKET_NAME: ${{ vars.SILVER_ZONE_BUCKET_NAME }}
@@ -192,6 +199,13 @@ jobs:
             --set airflow.database.name="$AIRFLOW_DB_NAME" \
             --set airflow.database.username="$AIRFLOW_DB_USERNAME" \
             --set-string airflow.database.password="$AIRFLOW_DB_PASSWORD" \
+            --set airflow.athena.database="$ATHENA_DATABASE_NAME" \
+            --set airflow.athena.workgroup="$ATHENA_WORKGROUP_NAME" \
+            --set airflow.athena.queryResultsBucket="$ATHENA_QUERY_RESULTS_BUCKET_NAME" \
+            --set airflow.athena.repositoryTable="$ATHENA_REPOSITORY_TABLE_NAME" \
+            --set airflow.athena.organizationTable="$ATHENA_ORGANIZATION_TABLE_NAME" \
+            --set airflow.athena.repositoryBucketCount="$ATHENA_REPOSITORY_BUCKET_COUNT" \
+            --set airflow.athena.organizationBucketCount="$ATHENA_ORGANIZATION_BUCKET_COUNT" \
             --set airflow.buckets.landingZone="$LANDING_ZONE_BUCKET_NAME" \
             --set airflow.buckets.bronzeZone="$BRONZE_ZONE_BUCKET_NAME" \
             --set airflow.buckets.silverZone="$SILVER_ZONE_BUCKET_NAME" \

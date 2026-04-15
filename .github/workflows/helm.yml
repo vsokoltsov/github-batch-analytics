@@ -32,6 +32,13 @@ jobs:
             --set airflow.database.name=airflow \
             --set airflow.database.username=airflow \
             --set-string airflow.database.password=test-password \
+            --set airflow.athena.database=github_analytics \
+            --set airflow.athena.workgroup=github-batch-analytics \
+            --set airflow.athena.queryResultsBucket=athena-results-bucket \
+            --set airflow.athena.repositoryTable=repositories \
+            --set airflow.athena.organizationTable=organizations \
+            --set airflow.athena.repositoryBucketCount=16 \
+            --set airflow.athena.organizationBucketCount=8 \
             --set airflow.buckets.landingZone=landing-bucket \
             --set airflow.buckets.bronzeZone=bronze-bucket \
             --set airflow.buckets.silverZone=silver-bucket \
@@ -54,6 +61,13 @@ jobs:
             --set airflow.database.name=airflow \
             --set airflow.database.username=airflow \
             --set-string airflow.database.password=test-password \
+            --set airflow.athena.database=github_analytics \
+            --set airflow.athena.workgroup=github-batch-analytics \
+            --set airflow.athena.queryResultsBucket=athena-results-bucket \
+            --set airflow.athena.repositoryTable=repositories \
+            --set airflow.athena.organizationTable=organizations \
+            --set airflow.athena.repositoryBucketCount=16 \
+            --set airflow.athena.organizationBucketCount=8 \
             --set airflow.buckets.landingZone=landing-bucket \
             --set airflow.buckets.bronzeZone=bronze-bucket \
             --set airflow.buckets.silverZone=silver-bucket \
