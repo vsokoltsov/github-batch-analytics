@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 from functools import lru_cache
 
 import pandas as pd
@@ -11,14 +12,25 @@ from dashboards.config import get_dashboard_config
 @lru_cache(maxsize=32)
 def load_repository_summary(start_date: str, end_date: str) -> pd.DataFrame:
     config = get_dashboard_config()
-    connection = connect(
-        region_name=config["aws_region"],
-        s3_staging_dir=(
+    connection_kwargs: dict[str, Any] = {
+        "region_name": config["aws_region"],
+        "s3_staging_dir": (
             f"s3://{config['athena_query_results_bucket_name']}/dash-query-results/"
         ),
-        schema_name=config["athena_database_name"],
-        work_group=config["athena_workgroup_name"],
-        profile_name=config.get("aws_profile") or None,
+        "schema_name": config["athena_database_name"],
+        "work_group": config["athena_workgroup_name"],
+    }
+
+    if config.get("aws_access_key_id") and config.get("aws_secret_access_key"):
+        connection_kwargs["aws_access_key_id"] = config["aws_access_key_id"]
+        connection_kwargs["aws_secret_access_key"] = config["aws_secret_access_key"]
+        if config.get("aws_session_token"):
+            connection_kwargs["aws_session_token"] = config["aws_session_token"]
+    elif config.get("aws_profile"):
+        connection_kwargs["profile_name"] = config["aws_profile"]
+
+    connection = connect(
+        **connection_kwargs,
     )
 
     query = f"""
