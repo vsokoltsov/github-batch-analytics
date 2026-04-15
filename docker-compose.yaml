@@ -15,12 +15,11 @@ services:
     env_file:
       - .env
     environment:
-      AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
       PYTHONPATH: /opt/airflow/dags
-      AWS_PROFILE: gba-admin
-      AWS_CONFIG_FILE: /home/airflow/.aws/config
-      AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
-      SPARK_MASTER_URL: spark://spark-master:7077
+      AWS_PROFILE: ${AWS_PROFILE}
+      AWS_CONFIG_FILE: ${AIRFLOW_AWS_CONFIG_FILE}
+      AWS_SHARED_CREDENTIALS_FILE: ${AIRFLOW_AWS_SHARED_CREDENTIALS_FILE}
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
     depends_on:
       postgres:
         condition: service_started
@@ -55,16 +54,11 @@ services:
       - .env
       - .env.spark
     environment:
-      AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
       PYTHONPATH: /opt/airflow/dags
-      AWS_PROFILE: gba-admin
-      AWS_CONFIG_FILE: /home/airflow/.aws/config
-      AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
-      SPARK_MASTER_URL: spark://spark-master:7077
-      DLT_DATA_DIR: /tmp/dlt
-      DLT_TELEMETRY: false
-      RUNTIME__DLTHUB_TELEMETRY: "false"
-      ENABLE_RUNTIME_TRACE: "false"
+      AWS_PROFILE: ${AWS_PROFILE}
+      AWS_CONFIG_FILE: ${AIRFLOW_AWS_CONFIG_FILE}
+      AWS_SHARED_CREDENTIALS_FILE: ${AIRFLOW_AWS_SHARED_CREDENTIALS_FILE}
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -93,16 +87,11 @@ services:
       - .env
       - .env.spark
     environment:
-      AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
       PYTHONPATH: /opt/airflow/dags
-      AWS_PROFILE: gba-admin
-      AWS_CONFIG_FILE: /home/airflow/.aws/config
-      AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
-      SPARK_MASTER_URL: spark://spark-master:7077
-      DLT_DATA_DIR: /tmp/dlt
-      DLT_TELEMETRY: false
-      RUNTIME__DLTHUB_TELEMETRY: "false"
-      ENABLE_RUNTIME_TRACE: "false"
+      AWS_PROFILE: ${AWS_PROFILE}
+      AWS_CONFIG_FILE: ${AIRFLOW_AWS_CONFIG_FILE}
+      AWS_SHARED_CREDENTIALS_FILE: ${AIRFLOW_AWS_SHARED_CREDENTIALS_FILE}
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -128,16 +117,11 @@ services:
       - .env
       - .env.spark
     environment:
-      AIRFLOW_CONN_SPARK_DEFAULT: ${AIRFLOW_CONN_SPARK_DEFAULT:-spark://spark-master:7077?deploy-mode=client&spark_binary=spark-submit}
       PYTHONPATH: /opt/airflow/dags
-      AWS_PROFILE: gba-admin
-      AWS_CONFIG_FILE: /home/airflow/.aws/config
-      AWS_SHARED_CREDENTIALS_FILE: /home/airflow/.aws/credentials
-      SPARK_MASTER_URL: spark://spark-master:7077
-      DLT_DATA_DIR: /tmp/dlt
-      DLT_TELEMETRY: false
-      RUNTIME__DLTHUB_TELEMETRY: "false"
-      ENABLE_RUNTIME_TRACE: "false"
+      AWS_PROFILE: ${AWS_PROFILE}
+      AWS_CONFIG_FILE: ${AIRFLOW_AWS_CONFIG_FILE}
+      AWS_SHARED_CREDENTIALS_FILE: ${AIRFLOW_AWS_SHARED_CREDENTIALS_FILE}
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -161,8 +145,8 @@ services:
     env_file: .env.spark
     environment:
       PYTHONPATH: /opt/airflow/dags
-      AWS_CONFIG_FILE: /home/spark/.aws/config
-      AWS_SHARED_CREDENTIALS_FILE: /home/spark/.aws/credentials
+      AWS_CONFIG_FILE: ${SPARK_AWS_CONFIG_FILE}
+      AWS_SHARED_CREDENTIALS_FILE: ${SPARK_AWS_SHARED_CREDENTIALS_FILE}
     ports:
       - "7077:7077"
       - "8081:8080"
@@ -185,8 +169,8 @@ services:
     env_file: .env.spark
     environment:
       PYTHONPATH: /opt/airflow/dags
-      AWS_CONFIG_FILE: /home/spark/.aws/config
-      AWS_SHARED_CREDENTIALS_FILE: /home/spark/.aws/credentials
+      AWS_CONFIG_FILE: ${SPARK_AWS_CONFIG_FILE}
+      AWS_SHARED_CREDENTIALS_FILE: ${SPARK_AWS_SHARED_CREDENTIALS_FILE}
     command:
       [
         "/opt/spark/bin/spark-class",
@@ -216,11 +200,11 @@ services:
       JUPYTER_DATA_DIR: /tmp/jupyter/data
       JUPYTER_RUNTIME_DIR: /tmp/jupyter/runtime
       IPYTHONDIR: /tmp/ipython
-      AWS_PROFILE: ${AWS_PROFILE:-gba-admin}
+      AWS_PROFILE: ${AWS_PROFILE}
       AWS_SDK_LOAD_CONFIG: "1"
-      AWS_CONFIG_FILE: /home/spark/.aws/config
-      AWS_SHARED_CREDENTIALS_FILE: /home/spark/.aws/credentials
-      SPARK_MASTER_URL: spark://spark-master:7077
+      AWS_CONFIG_FILE: ${SPARK_AWS_CONFIG_FILE}
+      AWS_SHARED_CREDENTIALS_FILE: ${SPARK_AWS_SHARED_CREDENTIALS_FILE}
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
     working_dir: /workspace
     ports:
       - "8888:8888"
@@ -234,6 +218,32 @@ services:
       - ./:/workspace
       - ./.local/aws:/home/spark/.aws:ro
       - ./.dlt:/home/airflow/.dlt:ro
+
+  streamlit-dashboard:
+    image: gba-airflow:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    working_dir: /workspace
+    env_file:
+      - .env
+    environment:
+      PYTHONPATH: /workspace
+      AWS_PROFILE: ${AWS_PROFILE}
+      AWS_CONFIG_FILE: ${AIRFLOW_AWS_CONFIG_FILE}
+      AWS_SHARED_CREDENTIALS_FILE: ${AIRFLOW_AWS_SHARED_CREDENTIALS_FILE}
+    command:
+      [
+        "bash",
+        "-lc",
+        "python -m streamlit run dashboards/app.py --server.address=0.0.0.0 --server.port=8501",
+      ]
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./:/workspace
+      - ./.local/aws:/home/airflow/.aws:ro
 
 volumes:
   postgres-db-volume:
