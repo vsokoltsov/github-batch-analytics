@@ -31,6 +31,10 @@ def get_dashboard_config() -> dict[str, str]:
             "ATHENA_REPOSITORY_SUMMARY_TABLE_NAME",
             "repository_dashboard_summary",
         ),
+        "athena_organization_summary_table_name": _read_setting(
+            "ATHENA_ORGANIZATION_SUMMARY_TABLE_NAME",
+            "organization_dashboard_summary",
+        ),
     }
 
     missing = [key for key in ["athena_query_results_bucket_name"] if not config[key]]
