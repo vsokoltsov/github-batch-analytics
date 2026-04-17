@@ -105,6 +105,9 @@ S3 zones:
 * [Airflow UI](http://52.29.121.73:8080/)
 * [Streamlit dashboard](https://app-batch-analytics-txp3puizg6e5jq7onsqo6o.streamlit.app/common)
 
+> ⚠️ Cloud availability note: the live AWS deployment and hosted dashboard may be unavailable at times due to credit limits, cost controls, or the stack being intentionally scaled down outside demonstration windows. 📉☁️  
+> ✅ The repository, infrastructure code, local Docker setup, and dashboard source remain complete and reproducible even if the public endpoints are temporarily offline.
+
 * <details>
 
   <summary>Dashboard views</summary>
